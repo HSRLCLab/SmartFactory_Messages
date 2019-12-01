@@ -11,86 +11,51 @@
 #include "MessageTranslation.h"
 
 // global defined translate function
-static void translateJsonToStruct(char* topic, byte* payload, unsigned int length)
+    // TODO storage problem 
+
+static void *translateJsonToStruct(byte* payload, unsigned int length, bufferStruct &buffer)
 {
+    // Deserialize json object to json document
     DynamicJsonDocument tempJson(length);
-    DeserializationError error = deserializeJson(doc, json);     
-    messageType tempMsgType = tempJson["msgType"].as<unsigned int>();
-    unsigned int tempMsgId = tempJson["msgId"].as<unsigned int>();
-    unsigned int tempMsgConsignor = tempJson["consignor"].as<unsigned int>;
-    switch (tempMsgType)
+    DeserializationError error = deserializeJson(doc, json);
+
+    switch (tempJson["msgType"].as<unsigned int>())
     {
-    case Package:
-        PackageMessage TransObject = new PackageMessage;
-        ParsePackageMessage::parseJSONToStruct(doc, TransObject, error);
-        packageMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::Package:
+        return ParsePackageMessage::parseJSONToStruct(doc, error);
         break;
-    case Error:
-        ErrorMessage TransObject = new ErrorMessage;
-        ParseErrorMessage::parseJSONToStruct(doc, TransObject, error);
-        errorMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::Error:
+        return ParseErrorMessage::parseJSONToStruct(doc, error);
         break;
-    case SBAvailable:
-        SBAvailableMessage TransObject = new SBAvailableMessage;
-        ParseSBAvailableMessage::parseJSONToStruct(doc, TransObject, error);
-        availableMessageBuffer[tempMsgConsignor - 1] = TransObject;
-        delete TransObject;
+    case MessageType::SBAvailable:
+        return ParseSBAvailableMessage::parseJSONToStruct(doc, error);
         break;
-    case SBPosition:
-        SBPositionMessage TransObject = new SBPositionMessage;
-        ParseSBPositionMessage::parseJSONToStruct(doc, TransObject, error);
-        positionMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SBPosition:
+        return ParseSBPositionMessage::parseJSONToStruct(doc, error);
         break;
-    case SBState:
-        SBStateMessage TransObject = new SBStateMessage;
-        ParseSBStateMessage::parseJSONToStruct(doc, TransObject, error);
-        stateMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SBState:
+        return ParseSBStateMessage::parseJSONToStruct(doc, error);
         break;
-    case SBToSVHandshake:
-        SBToSVHandshakeMessage TransObject = new SBToSVHandshakeMessage;
-        ParseSBtoSVHandshakeMessage::parseJSONToStruct(doc, TransObject, error);
-        handshakeMessageSBToSVBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SBToSVHandshake:
+        return ParseSBtoSVHandshakeMessage::parseJSONToStruct(doc, error);
         break;
-    case SVAvailable:
-        SVAvailableMessage TransObject = new SVAvailableMessage;
-        ParseSVAvailableMessage::parseJSONToStruct(doc, TransObject, error);
-        availableMessageBuffer[tempMsgConsignor - 3] = TransObject;
-        delete TransObject;
+    case MessageType::SVAvailable:
+        return ParseSVAvailableMessage::parseJSONToStruct(doc, error);
         break;
-    case SVPosition:
-        SVPositionMessage TransObject = new SVPositionMessage;
-        ParseSVPositionMessage::parseJSONToStruct(doc, TransObject, error);
-        svPositionMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SVPosition:
+        return ParseSVPositionMessage::parseJSONToStruct(doc, error);
         break;
-    case SVState:
-        SVStateMessage TransObject = new SVStateMessage;
-        ParseSVStateMessage::parseJSONToStruct(doc, TransObject, error);
-        svStateMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SVState:
+        return ParseSVStateMessage::parseJSONToStruct(doc, error);
         break;
-    case SBToSOHandshake:
-        SBtoSOHandshakeMessage TransObject = new SBtoSOHandshakeMessage;
-        ParseSBtoSOHandshakeMessage::parseJSONToStruct(doc, TransObject, error);
-        handshakeMessageSBToSOBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SBToSOHandshake:
+        return ParseSBtoSOHandshakeMessage::parseJSONToStruct(doc, error);
         break;
-    case SOPosition:
-        SOPositionMessage TransObject = new SOPositionMessage;
-        ParseSOPositionMessage::parseJSONToStruct(doc, TransObject, error);
-        soPositionMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SOPosition:
+        return ParseSOPositionMessage::parseJSONToStruct(doc, error);
         break;
-    case SOState:
-        SOStateMessage TransObject = new SOStateMessage;
-        ParseSOStateMessage::parseJSONToStruct(doc, TransObject, error);
-        soStateMessageBuffer = TransObject;
-        delete TransObject;
+    case MessageType::SOState:
+        return ParseSOStateMessage::parseJSONToStruct(doc, error);
         break;
     default:
         DBWARNING("Translation failed");
@@ -165,21 +130,34 @@ ParsePackageMessage::~ParsePackageMessage()
 {
 }
 
-void ParsePackageMessage::parseJSONToStruct(JsonDocument doc, &PackageMessage object, DeserializationError error)
+PackageMessage *ParsePackageMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParsePackageMessage::parseJSONToStruct(JsonDocument doc, &PackageMessage object, DeserializationError error)");
+    PackageMessage *transObject = new PackageMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.packageId = doc["id"].as<String>();
-        object.cargo = doc["cargo"].as<String>();
-        object.targetDest = doc["targetDest"].as<String>;
-        object.targetReg = doc["targetReg"].as<String>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->packageId = doc["packageId"].as<unsigned int>();
+        transObject->cargo = doc["cargo"].as<String>();
+        transObject->targetDest = doc["targetDest"].as<String>;
+        transObject->targetReg = doc["targetReg"].as<String>;
+
+        // return dynamic object with pointer
+        return transObject;
     }
 }
 
@@ -190,11 +168,10 @@ String ParsePackageMessage::parseStructToString(const PackageMessage *object)
     return tempString;    
 }
 
-void ParsePackageMessage::setMessage(PackageMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg)
+void ParsePackageMessage::setMessage(PackageMessage &object, unsigned int messageId, Consignor messageConsignor, String messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.packageId = messagePackageId;
     object.cargo = messageCargo;
     object.targetDest = messageTargetDest;
@@ -210,19 +187,32 @@ ParseErrorMessage::~ParseErrorMessage()
 {
 }
 
-void ParseErrorMessage::parseJSONToStruct(JsonDocument doc, &ErrorMessage object, DeserializationError error)
+ErrorMessage *ParseErrorMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseErrorMessage::parseJSONToStruct(JsonDocument doc, &ErrorMessage object, DeserializationError error)");
+    ErrorMessage *transObject = new ErrorMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.error = doc["error"].as<String>();
-        object.token = doc["token"].as<String>();
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->error = doc["error"].as<bool>;
+        transObject->token = doc["token"].as<bool>;
+
+        // return dynamic object with pointer
+        return transObject;
     }    
 }
 
@@ -233,11 +223,10 @@ String ParseErrorMessage::parseStructToString(const ErrorMessage *object)
     return tempString;
 }
 
-void ParseErrorMessage::setMessage(ErrorMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, bool messageError, bool messageToken)
+void ParseErrorMessage::setMessage(ErrorMessage &object, unsigned int messageId, Consignor messageConsignor, bool messageError, bool messageToken)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.error = messageError;
     object.token = messageToken;
 }
@@ -251,21 +240,34 @@ ParseSBAvailableMessage::~ParseSBAvailableMessage()
 {
 }
 
-void ParseSBAvailableMessage::parseJSONToStruct(JsonDocument doc, &SBAvailableMessage object, DeserializationError error)
+SBAvailableMessage *ParseSBAvailableMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseSBAvailableMessage::parseJSONToStruct(JsonDocument doc, &SBAvailableMessage object, DeserializationError error)");
+    SBAvailableMessage *transObject = new SBAvailableMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.sector = doc["sector"].as<String>();
-        object.line = doc["line"].as<String>();
-        object.targetReg = doc["targetReg"].as<String>;
-    }        
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->sector = doc["sector"].as<String>;
+        transObject->line = doc["line"].as<int>;
+        transObject->targetReg = doc["targetReg"].as<String>;
+
+        // return dynamic object with pointer
+        return transObject;
+    }           
 }
 
 String ParseSBAvailableMessage::parseStructToString(const SBAvailableMessage *object)
@@ -275,11 +277,10 @@ String ParseSBAvailableMessage::parseStructToString(const SBAvailableMessage *ob
     return tempString;    
 }
 
-void ParseSBAvailableMessage::setMessage(SBAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine, String messageTargetReg)
+void ParseSBAvailableMessage::setMessage(SBAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine, String messageTargetReg)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.sector = messageSector;
     object.line = messageLine;
     object.targetReg = messageTargetReg;
@@ -294,20 +295,33 @@ ParseSBPositionMessage::~ParseSBPositionMessage()
 {
 }
 
-void ParseSBPositionMessage::parseJSONToStruct(JsonDocument doc, &SBPositionMessage object, DeserializationError error)
+SBPositionMessage *ParseSBPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseSBPositionMessage::parseJSONToStruct(JsonDocument doc, &SBPositionMessage object, DeserializationError error)");
+    SBPositionMessage *transObject = new SBPositionMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.sector = doc["sector"].as<String>();
-        object.line = doc["line"].as<String>();
-    }        
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->sector = doc["sector"].as<String>;
+        transObject->line = doc["line"].as<int>;
+
+        // return dynamic object with pointer
+        return transObject;
+    }       
 }
 
 String ParseSBPositionMessage::parseStructToString(const SBPositionMessage *object)
@@ -317,11 +331,10 @@ String ParseSBPositionMessage::parseStructToString(const SBPositionMessage *obje
     return tempString;    
 }
 
-void ParseSBPositionMessage::setMessage(SBPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine)
+void ParseSBPositionMessage::setMessage(SBPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.sector = messageSector;
     object.line = messageLine;
 }
@@ -335,19 +348,32 @@ ParseSBStateMessage::~ParseSBStateMessage()
 {
 }
 
-void ParseSBStateMessage::parseJSONToStruct(JsonDocument doc, &SBStateMessage object, DeserializationError error)
+SBStateMessage *ParseSBStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseSBStateMessage::parseJSONToStruct(JsonDocument doc, &SBStateMessage object, DeserializationError error)");
+    SBStateMessage *transObject = new SBStateMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.state = doc["state"].as<String>();
-    }       
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->state = doc["state"].as<String>;
+
+        // return dynamic object with pointer
+        return transObject;
+    }   
 }
 
 String ParseSBStateMessage::parseStructToString(const SBStateMessage *object)
@@ -357,11 +383,10 @@ String ParseSBStateMessage::parseStructToString(const SBStateMessage *object)
     return tempString;    
 }
 
-void ParseSBStateMessage::setMessage(SBStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageState)
+void ParseSBStateMessage::setMessage(SBStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.state = messageState;
 }
 
@@ -374,21 +399,34 @@ ParseSBtoSVHandshakeMessage::~ParseSBtoSVHandshakeMessage()
 {
 }
 
-void ParseSBtoSVHandshakeMessage::parseJSONToStruct(JsonDocument doc, &SBToSVHandshakeMessage object, DeserializationError error)
+SBToSVHandshakeMessage *ParseSBtoSVHandshakeMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseSBtoSVHandshakeMessage::parseJSONToStruct(JsonDocument doc, &SBToSVHandshakeMessage object, DeserializationError error)");
+    SBToSVHandshakeMessage *transObject = new SBToSVHandshakeMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.reck = doc["reck"].as<String>;
-        object.ack = doc["ack"].as<String>;
-        object.cargo = doc["cargo"].as<String>;
-        object.line = doc["line"].as<String>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->reck = doc["reck"].as<String>;
+        transObject->ack = doc["ack"].as<String>;
+        transObject->cargo = doc["cargo"]<String>;
+        transObject->line = doc["line"]<int>;
+
+        // return dynamic object with pointer
+        return transObject;
     }       
 }
 
@@ -399,11 +437,10 @@ String ParseSBtoSVHandshakeMessage::parseStructToString(const SBToSVHandshakeMes
     return tempString;    
 }
 
-void ParseSBtoSVHandshakeMessage::setMessage(SBToSVHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageReck, String messageAck, String messageCargo, int messageLine)
+void ParseSBtoSVHandshakeMessage::setMessage(SBToSVHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck, String messageCargo, int messageLine)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.reck = messageReck;
     object.ack = messageAck;
     object.cargo = messageCargo;
@@ -419,19 +456,32 @@ ParseSVAvailableMessage::~ParseSVAvailableMessage()
 {
 }
 
-void ParseSVAvailableMessage::parseJSONToStruct(JsonDocument doc, &SVAvailableMessage object, DeserializationError error)
+SVAvailableMessage *ParseSVAvailableMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseSVAvailableMessage::parseJSONToStruct(JsonDocument doc, &SVAvailableMessage object, DeserializationError error)");
+    SVAvailableMessage *transObject = new SVAvailableMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.sector = doc["sector"].as<String>;
-        object.line = doc["line"].as<String>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->sector = doc["sector"].as<String>;
+        transObject->line = doc["line"].as<int>;
+
+        // return dynamic object with pointer
+        return transObject;
     }       
 }
 
@@ -442,11 +492,10 @@ String ParseSVAvailableMessage::parseStructToString(const SVAvailableMessage *ob
     return tempString;    
 }
 
-void ParseSVAvailableMessage::setMessage(SVAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine)
+void ParseSVAvailableMessage::setMessage(SVAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.sector = messageSector;
     object.line = messageLine;
 }
@@ -460,19 +509,32 @@ ParseSVPositionMessage::~ParseSVPositionMessage()
 {
 }
 
-void ParseSVPositionMessage::parseJSONToStruct(JsonDocument doc, &SVPositionMessage object, DeserializationError error)
+SVPositionMessage *ParseSVPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
     DBFUNCCALLln("ParseSVPositionMessage::parseJSONToStruct(JsonDocument doc, &SVPositionMessage object, DeserializationError error)");
+    SVPositionMessage *transObject = new SVPositionMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.sector = doc["sector"].as<String>;
-        object.line = doc["line"].as<String>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->sector = doc["sector"].as<String>;
+        transObject->line = doc["line"].as<int>;
+
+        // return dynamic object with pointer
+        return transObject;
     }
 }
 
@@ -483,11 +545,10 @@ String ParseSVPositionMessage::parseStructToString(const SVPositionMessage *obje
     return tempString;    
 }
 
-void ParseSVPositionMessage::setMessage(SVPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine)
+void ParseSVPositionMessage::setMessage(SVPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.sector = messageSector;
     object.line = messageLine;
 }
@@ -501,18 +562,31 @@ ParseSVStateMessage::~ParseSVStateMessage()
 {
 }
 
-void ParseSVStateMessage::parseJSONToStruct(JsonDocument doc, &SVStateMessage object, DeserializationError error)
+SVStateMessage *ParseSVStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
     DBFUNCCALLln("ParseSVStateMessage::parseJSONToStruct(JsonDocument doc, &SVStateMessage object, DeserializationError error)");
+    SVStateMessage *transObject = new SVStateMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.state = doc["sector"].as<String>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->state = doc["state"].as<String>;
+
+        // return dynamic object with pointer
+        return transObject;
     }
 }
 
@@ -523,11 +597,10 @@ String ParseSVStateMessage::parseStructToString(const SVStateMessage *object)
     return tempString;    
 }
 
-void ParseSVStateMessage::setMessage(SVStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageState)
+void ParseSVStateMessage::setMessage(SVStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.state = messageState;
 }
 
@@ -540,22 +613,35 @@ ParseSBtoSOHandshakeMessage::~ParseSBtoSOHandshakeMessage()
 {
 }
 
-void ParseSBtoSOHandshakeMessage::parseJSONToStruct(JsonDocument doc, &SBtoSOHandshakeMessage object, DeserializationError error)
+SBtoSOHandshakeMessage *ParseSBtoSOHandshakeMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
     DBFUNCCALLln("ParseSBtoSOHandshakeMessage::parseJSONToStruct(JsonDocument doc, &SBtoSOHandshakeMessage object, DeserializationError error)");
+    SBtoSOHandshakeMessage *transObject = new SBtoSOHandshakeMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.reck = doc["reck"].as<String>;
-        object.ack = doc["ack"].as<String>;
-        object.cargo = doc["cargo"].as<String>;
-        object.targetReg = doc["targetReg"].as<String>;
-        object.line = doc["line"].as<int>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->reck = doc["reck"].as<String>;
+        transObject->ack = doc["ack"].as<String>;
+        transObject->cargo = doc["cargo"].as<String>;
+        transObject->targetReg = doc["targetReg"].as<String>;
+        transObject->line = doc["line"].as<int>;
+
+        // return dynamic object with pointer
+        return transObject;
     }
 }
 
@@ -566,11 +652,10 @@ String ParseSBtoSOHandshakeMessage::parseStructToString(const SBtoSOHandshakeMes
     return tempString;    
 }
 
-void ParseSBtoSOHandshakeMessage::setMessage(SBtoSOHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageReck, String messageAck, String messageTargetReg, int messageLine)
+void ParseSBtoSOHandshakeMessage::setMessage(SBtoSOHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck, String messageCargo, String messageTargetReg, int messageLine)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.reck = messageReck;
     object.ack = messageAck;
     object.cargo = messageCargo;
@@ -587,18 +672,31 @@ ParseSOPositionMessage::~ParseSOPositionMessage()
 {
 }
 
-void ParseSOPositionMessage::parseJSONToStruct(JsonDocument doc, &SOPositionMessage object, DeserializationError error)
+void ParseSOPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
     DBFUNCCALLln("ParseSOPositionMessage::parseJSONToStruct(JsonDocument doc, &SOPositionMessage object, DeserializationError error)");
+    SOPositionMessage *transObject = new SOPositionMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.line = doc["line"].as<int>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->line = doc["line"].as<int>;
+
+        // return dynamic object with pointer
+        return transObject;
     }
 }
 
@@ -609,11 +707,10 @@ String ParseSOPositionMessage::parseStructToString(const SOPositionMessage *obje
     return tempString;    
 }
 
-void ParseSOPositionMessage::setMessage(SOPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, int messageLine)
+void ParseSOPositionMessage::setMessage(SOPositionMessage &object, unsigned int messageId, Consignor messageConsignor, int messageLine)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.line = messageLine;
 }
 
@@ -626,18 +723,31 @@ ParseSOStateMessage::~ParseSOStateMessage()
 {
 }
 
-void ParseSOStateMessage::parseJSONToStruct(JsonDocument doc, &SOStateMessage object, DeserializationError error)
+SOStateMessage *ParseSOStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
     DBFUNCCALLln("ParseSOStateMessage::parseJSONToStruct(JsonDocument doc, &SOStateMessage object, DeserializationError error)");
+    SOStateMessage *transObject = new SOStateMessage;
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
         DBWARNINGln(error.c_str());
-        object.packageId = "Parse failed";
+
+        // set msgId to zero, zero means errorId
+        transObject->msgFrame->msgId = 0;
     }
     else
     {
-        object.state = doc["state"].as<String>;
+        // Parse message frame
+        transObject->msgFrage->msgId = doc["msgId"].as<unsigned int>();
+        transObject->msgFrage->msgType = doc["msgType"].as<unsigned int>();
+        transObject->msgFrage->msgLength = doc["msgLength"].as<unsigned int>();
+        transObject->msgFrage->msgConsignor = doc["msgConsignor"].as<unsigned int>();
+
+        // Parse specific message
+        transObject->state = doc["state"].as<String>;
+
+        // return dynamic object with pointer
+        return transObject;
     }
 }
 
@@ -648,10 +758,9 @@ String ParseSOStateMessage::parseStructToString(const SOStateMessage *object)
     return tempString;    
 }
 
-void ParseSOStateMessage::setMessage(SOStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageState)
+void ParseSOStateMessage::setMessage(SOStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState)
 {
     object.messageFrame.id = messageId;
     object.messageFrame.consignor = messageConsignor;
-    object.messageFrame.topic = messageTopic;
     object.state = messageState;
 }

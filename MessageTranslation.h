@@ -22,11 +22,10 @@
 /**
  * @brief Static function to serialize a JSON object to a message struct
  * 
- * @param topic - char*
  * @param payload - byte*
  * @param length - unsigned int
  */
-static void translateJsonToStruct(char* topic, byte* payload, unsigned int length);
+static void *translateJsonToStruct(byte* payload, unsigned int length);
 
 /**
  * @brief Static template function to serialize a message struct to a publish string
@@ -64,10 +63,11 @@ class Message
     /**
      * @brief Virtual function to parse JSON object to a message struct
      * 
-     * @param json - const char*
-     * @return this 
+     * @param doc - JsonDocument
+     * @param error - DeserializationError
+     * @return void* 
      */
-    virtual static this parseJSONToStruct(const char* json);   
+    virtual static void *parseJSONToStruct(JsonDocument doc, DeserializationError error);   
 
     /**
      * @brief Virtual function parse message struct to publish string
@@ -109,10 +109,10 @@ public:
      * @brief Translate package message JSON to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &PackageMessage
      * @param error - DeserializationError
+     * @return PackageMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &PackageMessage object, DeserializationError error);
+    virtual static PackageMessage* parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate package message struct to publish string
@@ -128,13 +128,12 @@ public:
      * @param object - &PackageMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messagePackageId - String
      * @param messageCargo - String
      * @param messageTargetDest - String
      * @param messageTargetReg - String
      */
-    virtual static void setMessage(PackageMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg);
+    virtual static void setMessage(PackageMessage &object, unsigned int messageId, Consignor messageConsignor, String messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg);
 };
 
 /**
@@ -163,10 +162,10 @@ public:
      * @brief Translate error message JSON to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &ErrorMessage
      * @param error - DeserializationError
+     * @return ErrorMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &ErrorMessage object, DeserializationError error);
+    virtual static ErrorMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate error message struct to string 
@@ -182,11 +181,10 @@ public:
      * @param object - &ErrorMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageError - bool
      * @param messageToken - bool
      */
-    virtual static void setMessage(ErrorMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, bool messageError, bool messageToken);
+    virtual static void setMessage(ErrorMessage &object, unsigned int messageId, Consignor messageConsignor, bool messageError, bool messageToken);
 };
 
 /**
@@ -214,10 +212,10 @@ public:
      * @brief Translate smartbox available message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SBAvailableMessage
      * @param error - DeserializationError
+     * @return SBAvailableMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SBAvailableMessage object, DeserializationError error);
+    virtual static SBAvailableMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartbox available message struct to string
@@ -233,12 +231,11 @@ public:
      * @param object - &SBAvailableMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageSector - String
      * @param messageLine - int
      * @param messageTargetReg - String
      */
-    virtual static void setMessage(SBAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine, String messageTargetReg);
+    virtual static void setMessage(SBAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine, String messageTargetReg);
 };
 
 /**
@@ -266,10 +263,10 @@ public:
      * @brief Translate smartbox position message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SBPositionMessage
      * @param error - DeserializationError
+     * @return SBPositionMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SBPositionMessage object, DeserializationError error);
+    virtual static SBPositionMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartbox position message struct to publish string
@@ -285,11 +282,10 @@ public:
      * @param object - SBPositionMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageSector - string
      * @param messageLine - int
      */
-    virtual static void setMessage(SBPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine);
+    virtual static void setMessage(SBPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
 };
 
 /**
@@ -317,10 +313,10 @@ public:
      * @brief Translate smartbox state message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object &SBStateMessage
      * @param error - DeserializationError
+     * @return SBStateMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SBStateMessage object, DeserializationError error);
+    virtual static SBStateMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartbox state message struct to string
@@ -336,10 +332,9 @@ public:
      * @param object - SBStateMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageState - String
      */
-    virtual static void setMessage(SBStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageState);
+    virtual static void setMessage(SBStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState);
 };
 
 #if defined(BOX) || defined(VEHICLE)
@@ -369,10 +364,10 @@ public:
      * @brief Translate smartbox to smartvehicle handshake message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SBToSVHandshakeMessage
      * @param error - DeserializationError
+     * @return SBToSVHandshakeMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SBToSVHandshakeMessage object, DeserializationError error);
+    virtual static SBToSVHandshakeMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartbox to smartvehicle handshake message struct to publish string
@@ -388,13 +383,12 @@ public:
      * @param object - SBToSVHandshakeMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageReck - String
      * @param messageAck - String
      * @param messageCargo - String
      * @param messageLine - int
      */
-    virtual static void setMessage(SBToSVHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageReck, String messageAck, String messageCargo, int messageLine);
+    virtual static void setMessage(SBToSVHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck, String messageCargo, int messageLine);
 };
 
 
@@ -423,10 +417,10 @@ public:
      * @brief Translate smartvehicle available message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SVAvailableMessage
      * @param error - DeserializationError
+     * @return SVAvailableMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SVAvailableMessage object, DeserializationError error);
+    virtual static SVAvailableMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartvehicle available message struct to publish string
@@ -442,11 +436,10 @@ public:
      * @param object - &SVAvailableMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageSector - String
      * @param messageLine - int
      */
-    virtual static void setMessage(SVAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine);
+    virtual static void setMessage(SVAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
 };
 
 /**
@@ -474,10 +467,10 @@ public:
      * @brief Translate smartvehicle position message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SVPositionMessage
      * @param error - DeserializationError
+     * @return SVPositionMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SVPositionMessage object, DeserializationError error);
+    virtual static SVPositionMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartvehicle position message struct to publish string
@@ -493,11 +486,10 @@ public:
      * @param object - SVPositionMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageSector - String
      * @param messageLine - int
      */
-    virtual static void setMessage(SVPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageSector, int messageLine);
+    virtual static void setMessage(SVPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
 };
 
 /**
@@ -525,10 +517,10 @@ public:
      * @brief Translate smartvehicle state message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SVStateMessage
      * @param error - DeserializationError
+     * @return SVStateMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SVStateMessage object, DeserializationError error);
+    virtual static SVStateMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartvehicle state message struct to publish string
@@ -544,10 +536,9 @@ public:
      * @param object - SVStateMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageState - String
      */
-    virtual static void setMessage(SVStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageState);
+    virtual static void setMessage(SVStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState);
 };
 
 #if defined(BOX) || defined(SORTIC)
@@ -577,10 +568,10 @@ public:
      * @brief Translate smartbox to sortic handshake message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SBtoSOHandshakeMessage
      * @param error - DeserializationError
+     * @return SBtoSOHandshakeMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SBtoSOHandshakeMessage object, DeserializationError error);
+    virtual static SBtoSOHandshakeMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate smartbox to sortic handshake message struct to publish message
@@ -596,13 +587,12 @@ public:
      * @param object - SBtoSOHandshakeMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageReck - String
      * @param messageAck - String
      * @param messageTargetReg - String
      * @param messageLine - int
      */
-    virtual static void setMessage(SBtoSOHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageReck = "-1", String messageAck = "-1", String messageTargetReg = "-1", int messageLine = -1);
+    virtual static void setMessage(SBtoSOHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageReck = "-1", String messageAck = "-1", String messageTargetReg = "-1", int messageLine = -1);
 };
 
 /**
@@ -630,10 +620,10 @@ public:
      * @brief Translate sortic position message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SOPositionMessage
      * @param error - DeserializationError
+     * @return SOPositionMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SOPositionMessage object, DeserializationError error);
+    virtual static SOPositionMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate sortic position message struct to publish string
@@ -649,10 +639,9 @@ public:
      * @param object - &SOPositionMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageLine - int
      */
-    virtual static void setMessage(SOPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, int messageLine);
+    virtual static void setMessage(SOPositionMessage &object, unsigned int messageId, Consignor messageConsignor, int messageLine);
 };
 
 /**
@@ -680,10 +669,10 @@ public:
      * @brief Translate sortic state message json to struct
      * 
      * @param doc - JsonDocument
-     * @param object - &SOStateMessage
-     * @param error - DeserilizationError
+     * @param error - DeserializationError
+     * @return SOStateMessage*
      */
-    virtual static void parseJSONToStruct(JsonDocument doc, &SOStateMessage object, DeserializationError error);
+    virtual static SOStateMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
 
     /**
      * @brief Translate sortic state message struct to publish state
@@ -699,10 +688,9 @@ public:
      * @param object - &SOSTateMessage
      * @param messageId - unsigned int
      * @param messageConsignor - Consignor
-     * @param messageTopic - String
      * @param messageState - String
      */
-    virtual static void setMessage(SOStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageTopic, String messageState);
+    virtual static void setMessage(SOStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState);
 };
 
 #endif
