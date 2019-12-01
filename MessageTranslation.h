@@ -75,7 +75,8 @@ class Message
      * @param messageClass - this
      * @return String 
      */
-    virtual static String parseStructToString(this messageClass);
+    template<typename T>
+    virtual static String parseStructToString(T const &object);
 
     /**
      * @brief Set the Message object
