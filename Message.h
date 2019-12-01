@@ -5,25 +5,24 @@
 
 #define SORTIC
 // global defined message buffer
-#ifdef SORTIC
-static PackageMessage packageMessageBuffer[STORELENGTH];                                    ///< instance of package message to store messages
 static ErrorMessage errorMessageBuffer[STORELENGTH];                                        ///< instance of error message to store messages
-static SBAvailableMessage availableMessageBuffer[STORELENGTH][CONSIGNORSIZE];               ///< instance of smart box available message to store messages
-static SBPositionMessage positionMessageBuffer[STORELENGTH][CONSIGNORSIZE];                 ///< instance of smart box position message to store messages
-static SBStateMessage stateMessageBuffer[STORELENGTH][CONSIGNORSIZE];                       ///< instance of smart box state message to store messages
-static SBtoSOHandshakeMessage handshakeMessageSBToSOBuffer[STORELENGTH][CONSIGNORSIZE];     ///< instance of smart box to sortic handshake message to store messages
+static PackageMessage packageMessageBuffer[STORELENGTH][PACKAGESTORAGE];                    ///< instance of package message to store messages  
+
+#ifdef SORTIC                    
+static SBAvailableMessage sbAvailableMessageBuffer[STORELENGTH][CONSIGNORSIZE];               ///< instance of smart box available message to store messages
+static SBPositionMessage sbPositionMessageBuffer[STORELENGTH][CONSIGNORSIZE];                 ///< instance of smart box position message to store messages
+static SBStateMessage sbStateMessageBuffer[STORELENGTH][CONSIGNORSIZE];                       ///< instance of smart box state message to store messages
+static SBtoSOHandshakeMessage handshakeMessageSBToSOBuffer[STORELENGTH];                      ///< instance of smart box to sortic handshake message to store messages
 #endif
 
 #ifdef BOX
-static PackageMessage packageMessageBuffer;
-static ErrorMessage errorMessageBuffer;
-static SVAvailableMessage availableMessageBuffer[3];
-static SVPositionMessage svPositionMessageBuffer;
-static SVStateMessage svStateMessageBuffer;
-static SBtoSOHandshakeMessage handshakeMessageSBToSOBuffer;
-static SBToSVHandshakeMessage handshakeMessageSBToSVBuffer;
-static SOPositionMessage soPositionMessageBuffer;
-static SOStateMessage soStateMessageBuffer;
+static SVAvailableMessage svAvailableMessageBuffer[STORELENGTH][CONSIGNORSIZE];
+static SVPositionMessage svPositionMessageBuffer[STORELENGTH][CONSIGNORSIZE];
+static SVStateMessage svStateMessageBuffer[STORELENGTH][CONSIGNORSIZE];
+static SBtoSOHandshakeMessage handshakeMessageSBToSOBuffer[STORELENGTH];
+static SBToSVHandshakeMessage handshakeMessageSBToSVBuffer[STORELENGTH][CONSIGNORSIZE];
+static SOPositionMessage soPositionMessageBuffer[STORELENGTH];
+static SOStateMessage soStateMessageBuffer[STORELENGTH];
 #endif
 
 #ifdef VEHICLE
@@ -56,6 +55,7 @@ enum class MessageType
  */
 enum class Consignor
 {
+    DEFUALTCONSIGNOR
     SO1
     SB1
     SB2
@@ -69,23 +69,22 @@ enum class Consignor
  * @brief Default message struct for default message frame
  * 
  */
-struct defaultMessage
+struct MessageFrame
 {
-    unsigned int id;
+    unsigned int msgId = 0;
     messageType msgType;
-    unsigned int msgLength
-    Consignor consignor;
-    String topic;
+    unsigned int msgLength = 0;
+    Consignor msgConsignor = MessageTpye::DEFUALTCONSIGNOR;
 };
 
 /**
  * @brief Package message struct holds all package parameter
  * 
  */
-struct PackageMessage
+struct PackageMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, Package, 0};
-    String packageId = "-1";
+    msgType = MessageType::Package;
+    unsigned int packageId = 0;
     String cargo = "-1";
     String targetDest = "-1";
     String targetReg = "-1";
@@ -95,9 +94,9 @@ struct PackageMessage
  * @brief Error message struct holds all error parameter
  * 
  */
-struct ErrorMessage
+struct ErrorMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, Error, 0};
+    msgType = MessageType::Error;
     bool error;
     bool token;
 };
@@ -106,9 +105,9 @@ struct ErrorMessage
  * @brief Smartbox available message struct holds all available parameter
  * 
  */
-struct SBAvailableMessage
+struct SBAvailableMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SBAvailable, 0};
+    msgType = MessageType::SBAvailable;
     String sector = "-1";
     int line = "-1";
     String targetReg = "-1";
@@ -118,9 +117,9 @@ struct SBAvailableMessage
  * @brief Smartbox position message struct holds all position parameter
  * 
  */
-struct SBPositionMessage
+struct SBPositionMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SBPosition, 0};
+    msgType = MessageType::SBPosition;
     String sector = "-1";
     int line = "-1";
 };
@@ -129,9 +128,9 @@ struct SBPositionMessage
  * @brief Smartbox state message struct holds state
  * 
  */
-struct SBStateMessage
+struct SBStateMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SBState, 0};
+    msgType = MessageType::SBState;
     String state = "-1";
 };
 
@@ -139,9 +138,9 @@ struct SBStateMessage
  * @brief Smartbox to Smartvehicle handshake message struct holds all handshake parameter
  * 
  */
-struct SBToSVHandshakeMessage
+struct SBToSVHandshakeMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SBToSVHandshake, 0};
+    msgType = MessageType::SBToSVHandshake;
     String reck = "-1";
     String ack = "-1";
     String cargo = "-1";
@@ -152,9 +151,9 @@ struct SBToSVHandshakeMessage
  * @brief Smartvehicle available message struct holds all available parameter of Smartvehicle
  * 
  */
-struct SVAvailableMessage
+struct SVAvailableMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SBAvailable, 0};
+    msgType = MessageType::SVAvailable;
     String sector = "-1";
     int line = "-1";
 };
@@ -163,9 +162,9 @@ struct SVAvailableMessage
  * @brief Smartvehicle position message struct holds all position parameter of Smartvehicle
  * 
  */
-struct SVPositionMessage
+struct SVPositionMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SVPosition, 0};
+    msgType = MessageType::SVPosition;
     String sector = "-1";
     int line = "-1";
 };
@@ -174,9 +173,9 @@ struct SVPositionMessage
  * @brief Smartvehicle state message struct holds state of Smartvehicle
  * 
  */
-struct SVStateMessage
+struct SVStateMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SVState, 0};
+    msgType = MessageType::SVState;
     String state = "-1"; 
 };
 
@@ -184,9 +183,9 @@ struct SVStateMessage
  * @brief Smartbox to Sortic handshake message struct holds all handshake parameter
  * 
  */
-struct SBtoSOHandshakeMessage
+struct SBToSOHandshakeMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SBToSOHandshake, 0};
+    msgType = MessageType::SBToSOHandshake;
     String reck = "-1";
     String ack = "-1";
     String cargo = "-1";
@@ -198,9 +197,9 @@ struct SBtoSOHandshakeMessage
  * @brief Sortic position message struct holds position of Sortic
  * 
  */
-struct SOPositionMessage
+struct SOPositionMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SOPosition, 0};
+    msgType = MessageType::SOPosition;
     int line;  
 };
 
@@ -208,9 +207,9 @@ struct SOPositionMessage
  * @brief Sortic state message struct holds state of Sortic
  * 
  */
-struct SOStateMessage
+struct SOStateMessage : MessageFrame
 {
-    defaultMessage msgFrame = {0, SOState, 0};
+    msgType = MessageType::SOState;
     String state;
 };
 
