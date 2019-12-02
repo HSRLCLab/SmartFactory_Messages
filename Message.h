@@ -3,31 +3,6 @@
 
 #include <Arduino.h>
 
-#define SORTIC
-// global defined message buffer
-static ErrorMessage errorMessageBuffer[STORELENGTH];                                        ///< instance of error message to store messages
-static PackageMessage packageMessageBuffer[STORELENGTH][PACKAGESTORAGE];                    ///< instance of package message to store messages  
-
-#ifdef SORTIC                    
-static SBAvailableMessage sbAvailableMessageBuffer[STORELENGTH][CONSIGNORSIZE];               ///< instance of smart box available message to store messages
-static SBPositionMessage sbPositionMessageBuffer[STORELENGTH][CONSIGNORSIZE];                 ///< instance of smart box position message to store messages
-static SBStateMessage sbStateMessageBuffer[STORELENGTH][CONSIGNORSIZE];                       ///< instance of smart box state message to store messages
-static SBtoSOHandshakeMessage handshakeMessageSBToSOBuffer[STORELENGTH];                      ///< instance of smart box to sortic handshake message to store messages
-#endif
-
-#ifdef BOX
-static SVAvailableMessage svAvailableMessageBuffer[STORELENGTH][CONSIGNORSIZE];
-static SVPositionMessage svPositionMessageBuffer[STORELENGTH][CONSIGNORSIZE];
-static SVStateMessage svStateMessageBuffer[STORELENGTH][CONSIGNORSIZE];
-static SBtoSOHandshakeMessage handshakeMessageSBToSOBuffer[STORELENGTH];
-static SBToSVHandshakeMessage handshakeMessageSBToSVBuffer[STORELENGTH][CONSIGNORSIZE];
-static SOPositionMessage soPositionMessageBuffer[STORELENGTH];
-static SOStateMessage soStateMessageBuffer[STORELENGTH];
-#endif
-
-#ifdef VEHICLE
-// define messagebuffers for vehicle
-#endif
 
 /**
  * @brief Message type class holds all possible message types
