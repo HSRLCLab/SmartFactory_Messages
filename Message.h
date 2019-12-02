@@ -47,9 +47,9 @@ enum class Consignor
 struct MessageFrame
 {
     unsigned int msgId = 0;
-    messageType msgType;
+    MessageType msgType;
     unsigned int msgLength = 0;
-    Consignor msgConsignor = MessageTpye::DEFUALTCONSIGNOR;
+    Consignor msgConsignor = MessageType::DEFUALTCONSIGNOR;
 };
 
 /**
