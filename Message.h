@@ -10,17 +10,17 @@
  */
 enum class MessageType
 {
-    Package
-    Error
-    SBAvailable
-    SBPosition
-    SBState
-    SBToSVHandshake
-    SVAvailable
-    SVPosition
-    SVState
-    SBToSOHandshake
-    SOPosition
+    Package,
+    Error,
+    SBAvailable,
+    SBPosition,
+    SBState,
+    SBToSVHandshake,
+    SVAvailable,
+    SVPosition,
+    SVState,
+    SBToSOHandshake,
+    SOPosition,
     SOState
 };
 
@@ -30,13 +30,13 @@ enum class MessageType
  */
 enum class Consignor
 {
-    DEFUALTCONSIGNOR
-    SO1
-    SB1
-    SB2
-    SB3
-    SV1
-    SV2
+    DEFUALTCONSIGNOR,
+    SO1,
+    SB1,
+    SB2,
+    SB3,
+    SV1,
+    SV2,
     SV3
 };
 
@@ -84,7 +84,7 @@ struct SBAvailableMessage : MessageFrame
 {
     msgType = MessageType::SBAvailable;
     String sector = "-1";
-    int line = "-1";
+    int line = -1;
     String targetReg = "-1";
 };
 
@@ -96,7 +96,7 @@ struct SBPositionMessage : MessageFrame
 {
     msgType = MessageType::SBPosition;
     String sector = "-1";
-    int line = "-1";
+    int line = -1;
 };
 
 /**
@@ -119,7 +119,7 @@ struct SBToSVHandshakeMessage : MessageFrame
     String reck = "-1";
     String ack = "-1";
     String cargo = "-1";
-    int line = "-1";
+    int line = -1;
 };
 
 /**
@@ -130,7 +130,7 @@ struct SVAvailableMessage : MessageFrame
 {
     msgType = MessageType::SVAvailable;
     String sector = "-1";
-    int line = "-1";
+    int line = -1;
 };
 
 /**
@@ -141,7 +141,7 @@ struct SVPositionMessage : MessageFrame
 {
     msgType = MessageType::SVPosition;
     String sector = "-1";
-    int line = "-1";
+    int line = -1;
 };
 
 /**
@@ -165,7 +165,7 @@ struct SBToSOHandshakeMessage : MessageFrame
     String ack = "-1";
     String cargo = "-1";
     String targetReg = "-1";
-    int line = "-1";
+    int line = -1;
 };
 
 /**
@@ -175,7 +175,7 @@ struct SBToSOHandshakeMessage : MessageFrame
 struct SOPositionMessage : MessageFrame
 {
     msgType = MessageType::SOPosition;
-    int line;  
+    int line = -1;  
 };
 
 /**
