@@ -13,40 +13,37 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <memory>
 #include "LogConfiguration.h"
-#include "Message.h"
+//#include "MainConfiguration.h"
 
-
-// GLOBAL defined translatefunction
+#define MASTER
 
 /**
- * @brief Static function to serialize a JSON object to a message struct
+ * @brief 
  * 
- * @param payload - byte*
- * @param length - unsigned int
  */
-static void *translateJsonToStruct(byte* payload, unsigned int length);
+enum class Consignor
+{
+    DEFUALTCONSIGNOR,
+    SO1,
+    SB1,
+    SB2,
+    SB3,
+    SV1,
+    SV2,
+    SV3
+};
 
 /**
- * @brief Static template function to serialize a message struct to a publish string
- * 
- * @tparam T - typename
- * @param object - const &typename
- * @return String 
- */
-template<typename T>
-static String translateStructToString(const &T object);
-
-
-
-#if defined(BOX)  || defined(SORTIC) || defined(VEHICLE)
-/**
- * @brief Parent message class with virtual functions to overwrite in child class
+ * @brief Abstract parent class to serialize messages
  * 
  */
 class Message
 {
     private:
+
+
     public:
     /**
      * @brief Construct a new Message object
@@ -58,90 +55,130 @@ class Message
      * @brief Destroy the Message object
      * 
      */
-    ~Message();
+    virtual ~Message();
 
     /**
-     * @brief Virtual function to parse JSON object to a message struct
+    * @brief Message type class holds all possible message types
+    * 
+    */
+    enum class MessageType
+    {
+        DEFAULTMESSAGETYPE,
+        Package,
+        Error,
+        SBAvailable,
+        SBPosition,
+        SBState,
+        SBToSVHandshake,
+        SVAvailable,
+        SVPosition,
+        SVState,
+        SBToSOHandshake,
+        SOPosition,
+        SOState,
+        SOInit,
+        SOBuffer
+    };
+
+    /**
+     * @brief Static function to serialize a JSON object to a class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return void* 
+     * @param payload 
+     * @param length 
+     * @return std::shared_ptr<Message> 
      */
-    virtual static void *parseJSONToStruct(JsonDocument doc, DeserializationError error);   
+    static std::shared_ptr<Message> translateJsonToStruct(const char* payload, unsigned int length); // MessageFactory
 
     /**
-     * @brief Virtual function parse message struct to publish string
+     * @brief Static function to serialize a message class to a publish string
      * 
-     * @param messageClass - this
+     * @param object 
      * @return String 
      */
-    template<typename T>
-    virtual static String parseStructToString(T const &object);
+    static String translateStructToString(std::shared_ptr<Message> object); // raus nehmen
+
+    // maybe possible to define private?
+    unsigned int msgId = 0;
+    MessageType msgType = MessageType::DEFAULTMESSAGETYPE;
+    unsigned int msgLength = 0;
+    Consignor msgConsignor = Consignor::DEFUALTCONSIGNOR;
+    
+    /**
+     * @brief Virtual function to parse JSON object to a message class
+     * 
+     * @param doc 
+     * @param error 
+     */
+    virtual void parseJSONToStruct(JsonDocument doc, DeserializationError error) = 0;   
 
     /**
-     * @brief Set the Message object
+     * @brief Virtual function to parse a message class to a publish string
      * 
+     * @return String 
      */
-    virtual static void setMessage();
+    virtual String parseStructToString() = 0;
 };
+
+
 
 /**
  * @brief Child class to serialize package message
  * 
  */
-class ParsePackageMessage : Message
+class PackageMessage : public Message
 {
-private:    
+private:
 public:
-
     /**
      * @brief Construct a new Parse Package Message object
      * 
      */
-    ParsePackageMessage();
+    PackageMessage();
 
     /**
      * @brief Destroy the Parse Package Message object
      * 
      */
-    ~ParsePackageMessage();
+    ~PackageMessage();
+
+    unsigned int packageId = 0;
+    String cargo = "-1";
+    String targetDest = "-1";
+    String targetReg = "-1";
 
     /**
-     * @brief Translate package message JSON to struct
+     * @brief Parse JSON object to the PackageMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return PackageMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static PackageMessage* parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate package message struct to publish string
+     * @brief Parse the PackageMessage class to a publish string
      * 
-     * @param messageClass - PackageMessage
      * @return String 
      */
-    virtual static String parseStructToString(PackageMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object package
+     * @brief Set the PackageMessage object
      * 
-     * @param object - &PackageMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messagePackageId - String
-     * @param messageCargo - String
-     * @param messageTargetDest - String
-     * @param messageTargetReg - String
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messagePackageId 
+     * @param messageCargo 
+     * @param messageTargetDest 
+     * @param messageTargetReg 
      */
-    virtual static void setMessage(PackageMessage &object, unsigned int messageId, Consignor messageConsignor, String messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, unsigned int messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg);
 };
 
 /**
  * @brief Child class to serialize error message
  * 
  */
-class ParseErrorMessage : Message
+class ErrorMessage : public Message
 {
 
 private:
@@ -151,48 +188,49 @@ public:
      * @brief Construct a new Parse Error Message object
      * 
      */
-    ParseErrorMessage();
+    ErrorMessage();
 
     /**
      * @brief Destroy the Parse Error Message object
      * 
      */
-    ~ParseErrorMessage();
+    ~ErrorMessage();
+
+    bool error;
+    bool token;
 
     /**
-     * @brief Translate error message JSON to struct
+     * @brief Parse JSON object to the ErrorMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return ErrorMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static ErrorMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate error message struct to string 
+     * @brief Parse the ErrorMessage class to a publish string
      * 
      * @param messageClass - ErrorMessage
      * @return String 
      */
-    virtual static String parseStructToString(ErrorMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object
+     * @brief Set the ErrorMessage object
      * 
-     * @param object - &ErrorMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageError - bool
-     * @param messageToken - bool
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageError 
+     * @param messageToken 
      */
-    virtual static void setMessage(ErrorMessage &object, unsigned int messageId, Consignor messageConsignor, bool messageError, bool messageToken);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, bool messageError, bool messageToken);
 };
 
 /**
  * @brief Child class to serialize smartbox available message
  * 
  */
-class ParseSBAvailableMessage : Message
+class SBAvailableMessage : public Message
 {
 private:
 public:
@@ -201,33 +239,37 @@ public:
      * @brief Construct a new Parse SB Available Message object
      * 
      */
-    ParseSBAvailableMessage();
+    SBAvailableMessage();
 
     /**
      * @brief Destroy the My JSON Message SB Available object
      * 
      */
-    ~MyJSONMessageSBAvailable();
+    ~SBAvailableMessage();
 
+    String sector = "-1";
+    int line = -1;
+    String targetReg = "-1";
+
+    
     /**
-     * @brief Translate smartbox available message json to struct
+     * @brief Parse JSON object to the SBAvailableMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SBAvailableMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SBAvailableMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartbox available message struct to string
+     * @brief Parse the SBAvailableMessage class to a publish string
      * 
      * @param messageClass - SBAvailableMessage
      * @return String 
      */
-    virtual static String parseStructToString(SBAvailableMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartbox available message
+     * @brief Set the SBAvailableMessage object
      * 
      * @param object - &SBAvailableMessage
      * @param messageId - unsigned int
@@ -236,14 +278,14 @@ public:
      * @param messageLine - int
      * @param messageTargetReg - String
      */
-    virtual static void setMessage(SBAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine, String messageTargetReg);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine, String messageTargetReg);
 };
 
 /**
- * @brief Child class to serialize smartbox possition message
+ * @brief Child class to serialize smartbox position message
  * 
  */
-class ParseSBPositionMessage : Message
+class SBPositionMessage : public Message
 {
 private:
 public:
@@ -252,48 +294,48 @@ public:
      * @brief Construct a new Parse S B Position Message object
      * 
      */
-    ParseSBPositionMessage();
+    SBPositionMessage();
 
     /**
      * @brief Destroy the Parse SB Position Message object
      * 
      */
-    ~ParseSBPositionMessage();
+    ~SBPositionMessage();
+
+    String sector = "-1";
+    int line = -1;
 
     /**
-     * @brief Translate smartbox position message json to struct
+     * @brief Parse JSON object to the SBPositionMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SBPositionMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SBPositionMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartbox position message struct to publish string
+     * @brief Parse the SBPositionMessage class to a publish string
      * 
-     * @param messageClass - SBPositionMessage
      * @return String 
      */
-    virtual static String parseStructToString(SBPositionMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartbox position
+     * @brief Set the SBPositionMessage object
      * 
-     * @param object - SBPositionMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageSector - string
-     * @param messageLine - int
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageSector 
+     * @param messageLine 
      */
-    virtual static void setMessage(SBPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
 };
 
 /**
- * @brief Class to serialize smartbox state message
+ * @brief Child class to serialize smartbox state message
  * 
  */
-class ParseSBStateMessage : Message
+class SBStateMessage : public Message
 {
 private:
 public:
@@ -302,49 +344,47 @@ public:
      * @brief Construct a new Parse S B State Message object
      * 
      */
-    ParseSBStateMessage();
+    SBStateMessage();
 
     /**
      * @brief Destroy the Parse S B State Message object
      * 
      */
-    ~ParseSBStateMessage();
+    ~SBStateMessage();
+
+    String state = "-1";
 
     /**
-     * @brief Translate smartbox state message json to struct
+     * @brief Parse JSON object to the SBStateMessage class
      * 
      * @param doc - JsonDocument
      * @param error - DeserializationError
      * @return SBStateMessage*
      */
-    virtual static SBStateMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartbox state message struct to string
+     * @brief Parse the SBStateMessage class to a publish string
      * 
-     * @param messageClass - SBStateMessage
      * @return String 
      */
-    virtual static String parseStructToString(SBStateMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartbox state
+     * @brief Set the SBStateMessage object
      * 
-     * @param object - SBStateMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageState - String
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageState 
      */
-    virtual static void setMessage(SBStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageState);
 };
 
-#if defined(BOX) || defined(VEHICLE)
-
 /**
- * @brief Class to serialize smartbox to smartvehicle handshake message
+ * @brief Child class to serialize smartbox to smartvehicle handshake message
  * 
  */
-class ParseSBtoSVHandshakeMessage : Message
+class SBToSVHandshakeMessage : public Message
 {
 private:   
 public:
@@ -353,51 +393,54 @@ public:
      * @brief Construct a new Parse SB to SV Handshake Message object
      * 
      */
-    ParseSBtoSVHandshakeMessage();
+    SBToSVHandshakeMessage();
 
     /**
      * @brief Destroy the Parse SB to SV Handshake Message object
      * 
      */
-    ~ParseSBtoSVHandshakeMessage();
+    ~SBToSVHandshakeMessage();
+
+    String reck = "-1";
+    String ack = "-1";
+    String cargo = "-1";
+    String targetReg = "-1";
+    int line = -1;
 
     /**
-     * @brief Translate smartbox to smartvehicle handshake message json to struct
+     * @brief Parse JSON object to the SBToSVHandshakeMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SBToSVHandshakeMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SBToSVHandshakeMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartbox to smartvehicle handshake message struct to publish string
+     * @brief Parse the SBToSVHandshakeMessage class to a publish string
      * 
-     * @param messageClass - SBToSVHandshakeMessage
      * @return String 
      */
-    virtual static String parseStructToString(SBToSVHandshakeMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartbox to smartvehicle handshake 
+     * @brief Set the SBToSVHandshakeMessage object
      * 
-     * @param object - SBToSVHandshakeMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageReck - String
-     * @param messageAck - String
-     * @param messageCargo - String
-     * @param messageLine - int
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageReck 
+     * @param messageAck 
+     * @param messageCargo 
+     * @param messageLine 
      */
-    virtual static void setMessage(SBToSVHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck, String messageCargo, int messageLine);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck, String messageCargo, int messageLine);
 };
 
 
 /**
- * @brief Class to serialize smartvehicle available message
+ * @brief Child class to serialize smartvehicle available message
  * 
  */
-class ParseSVAvailableMessage : Message
+class SVAvailableMessage : public Message
 {
 private:
 public:
@@ -406,48 +449,48 @@ public:
      * @brief Construct a new Parse SV Available Message object
      * 
      */
-    ParseSVAvailableMessage();
+    SVAvailableMessage();
 
     /**
      * @brief Destroy the Parse SV Available Message object
      * 
      */
-    ~ParseSVAvailableMessage();
+    ~SVAvailableMessage();
+
+    String sector = "-1";
+    int line = -1;
 
     /**
-     * @brief Translate smartvehicle available message json to struct
+     * @brief Parse JSON object to the SVAvailableMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SVAvailableMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SVAvailableMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartvehicle available message struct to publish string
+     * @brief Parse the SVAvailableMessage class to a publish string
      * 
-     * @param messageClass - SVAvailableMessage
      * @return String 
      */
-    virtual static String parseStructToString(SVAvailableMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartvehicle available
+     * @brief Set the SVAvailableMessage object
      * 
-     * @param object - &SVAvailableMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageSector - String
-     * @param messageLine - int
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageSector 
+     * @param messageLine 
      */
-    virtual static void setMessage(SVAvailableMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
 };
 
 /**
- * @brief Class to serialize smartvehicle position message
+ * @brief Child class to serialize smartvehicle position message
  * 
  */
-class ParseSVPositionMessage : Message
+class SVPositionMessage : public Message
 {
 private:
 public:
@@ -456,48 +499,48 @@ public:
      * @brief Construct a new Parse SV Position Message object
      * 
      */
-    ParseSVPositionMessage();
+    SVPositionMessage();
 
     /**
      * @brief Destroy the Parse SV Position Message object
      * 
      */
-    ~ParseSVPositionMessage();
+    ~SVPositionMessage();
+
+    String sector = "-1";
+    int line = -1;
 
     /**
-     * @brief Translate smartvehicle position message json to struct
+     * @brief Parse JSON object to the SVPositionMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SVPositionMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SVPositionMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartvehicle position message struct to publish string
+     * @brief Parse the SVPositionMessage class to a publish string
      * 
-     * @param messageClass - SVPositionMessage
      * @return String 
      */
-    virtual static String parseStructToString(SVPositionMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartvehicle position
+     * @brief Set the SVPositionMessage object
      * 
-     * @param object - SVPositionMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageSector - String
-     * @param messageLine - int
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageSector 
+     * @param messageLine 
      */
-    virtual static void setMessage(SVPositionMessage &object, unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine);
 };
 
 /**
- * @brief Class to serialize smartvehicle state message
+ * @brief Child class to serialize smartvehicle state message
  * 
  */
-class ParseSVStateMessage : Message
+class SVStateMessage : public Message
 {
 private:
 public:
@@ -506,49 +549,46 @@ public:
      * @brief Construct a new Parse SV State Message object
      * 
      */
-    ParseSVStateMessage();
+    SVStateMessage();
 
     /**
      * @brief Destroy the Parse SV State Message object
      * 
      */
-    ~ParseSVStateMessage();
+    ~SVStateMessage();
+
+    String state = "-1"; 
 
     /**
-     * @brief Translate smartvehicle state message json to struct
+     * @brief Parse JSON object to the SVStateMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SVStateMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SVStateMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartvehicle state message struct to publish string
+     * @brief Parse the SVStateMessage class to a publish string
      * 
-     * @param messageClass . SVStateMessage
      * @return String 
      */
-    virtual static String parseStructToString(SVStateMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartvehicle state 
+     * @brief Set the SVStateMessage object
      * 
-     * @param object - SVStateMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageState - String
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageState 
      */
-    virtual static void setMessage(SVStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageState);
 };
 
-#if defined(BOX) || defined(SORTIC)
-
 /**
- * @brief Class to serialize smartbox to sortic handshake message
+ * @brief Child class to serialize smartbox to sortic handshake message
  * 
  */
-class ParseSBtoSOHandshakeMessage : Message
+class SBToSOHandshakeMessage : public Message
 {
 private:
 public:
@@ -557,50 +597,54 @@ public:
      * @brief Construct a new Parse SB to SO Handshake Message object
      * 
      */
-    ParseSBtoSOHandshakeMessage();
+    SBToSOHandshakeMessage();
 
     /**
      * @brief Destroy the Parse SB to SO Handshake Message object
      * 
      */
-    ~ParseSBtoSOHandshakeMessage();
+    ~SBToSOHandshakeMessage();
+
+    String req = "-1";
+    String ack = "-1";
+    String cargo = "-1";
+    String targetReg = "-1";
+    int line = -1;
 
     /**
-     * @brief Translate smartbox to sortic handshake message json to struct
+     * @brief Parse JSON object to the SBToSOHandshakeMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SBtoSOHandshakeMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SBtoSOHandshakeMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
-
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
     /**
-     * @brief Translate smartbox to sortic handshake message struct to publish message
+     * @brief Parse the SBToSOHandshakeMessage class to a publish string
      * 
-     * @param messageClass - SBtoSOHandshakeMessage
      * @return String 
      */
-    virtual static String parseStructToString(SBtoSOHandshakeMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object smartbox to sortic handshake 
+     * @brief Set the SBToSOHandshakeMessage object
      * 
-     * @param object - SBtoSOHandshakeMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageReck - String
-     * @param messageAck - String
-     * @param messageTargetReg - String
-     * @param messageLine - int
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageReck 
+     * @param messageAck 
+     * @param messageCargo 
+     * @param messageTargetReg 
+     * @param messageLine 
      */
-    virtual static void setMessage(SBtoSOHandshakeMessage &object, unsigned int messageId, Consignor messageConsignor, String messageReck = "-1", String messageAck = "-1", String messageTargetReg = "-1", int messageLine = -1);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck = "-1", String messageCargo = "-1", String messageTargetReg = "-1", int messageLine = -1);
 };
 
 /**
- * @brief Class to serialize sortic position message
+ * @brief Child class to serialize sortic position message
  * 
  */
-class ParseSOPositionMessage : Message
+class SOPositionMessage : public Message
 {
 private:
 public:
@@ -609,47 +653,46 @@ public:
      * @brief Construct a new Parse SO Position Message object
      * 
      */
-    ParseSOPositionMessage();
+    SOPositionMessage();
 
     /**
      * @brief Destroy the Parse SO Position Message object
      * 
      */
-    ~ParseSOPositionMessage();
+    ~SOPositionMessage();
+
+    int line = -1; 
 
     /**
-     * @brief Translate sortic position message json to struct
+     * @brief Parse JSON object to the SOPositionMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SOPositionMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SOPositionMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
 
     /**
-     * @brief Translate sortic position message struct to publish string
+     * @brief Parse the SOPositionMessage class to a publish string
      * 
-     * @param messageClass 
      * @return String 
      */
-    virtual static String parseStructToString(SOPositionMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object sortic position
+     * @brief Set the SOPositionMessage object
      * 
-     * @param object - &SOPositionMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageLine - int
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageLine 
      */
-    virtual static void setMessage(SOPositionMessage &object, unsigned int messageId, Consignor messageConsignor, int messageLine);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, int messageLine);
 };
 
 /**
- * @brief Class to serialize sortic state message
+ * @brief Child class to serialize sortic state message
  * 
  */
-class ParseSOStateMessage : Message
+class SOStateMessage : public Message
 {
 private:
 public:
@@ -658,40 +701,209 @@ public:
      * @brief Construct a new Parse SO State Message object
      * 
      */
-    ParseSOStateMessage();
+    SOStateMessage();
 
     /**
      * @brief Destroy the Parse SO State Message object
      * 
      */
-    ~ParseSOStateMessage();
+    ~SOStateMessage();
+
+    String state;
 
     /**
-     * @brief Translate sortic state message json to struct
+     * @brief Parse JSON object to the SOStateMessage class
      * 
-     * @param doc - JsonDocument
-     * @param error - DeserializationError
-     * @return SOStateMessage*
+     * @param doc 
+     * @param error 
      */
-    virtual static SOStateMessage *parseJSONToStruct(JsonDocument doc, DeserializationError error);
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
 
     /**
-     * @brief Translate sortic state message struct to publish state
+     * @brief Parse the SOStateMessage class to a publish string
      * 
-     * @param messageClass - SOStateMessage
      * @return String 
      */
-    virtual static String parseStructToString(SOStateMessage messageClass);
+    String parseStructToString() override;
 
     /**
-     * @brief Set the Message object sortic state
+     * @brief Set the SOStateMessage object
      * 
-     * @param object - &SOSTateMessage
-     * @param messageId - unsigned int
-     * @param messageConsignor - Consignor
-     * @param messageState - String
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageState 
      */
-    virtual static void setMessage(SOStateMessage &object, unsigned int messageId, Consignor messageConsignor, String messageState);
+    void setMessage(unsigned int messageId, Consignor messageConsignor, String messageState);
 };
+
+/**
+ * @brief Child class to serialize sortic state message
+ * 
+ */
+class SOInitMessage : public Message
+{
+private:
+public:
+
+    /**
+     * @brief Construct a new Parse SO Init Message object
+     * 
+     */
+    SOInitMessage();
+
+    /**
+     * @brief Destroy the Parse SO Init Message Message object
+     * 
+     */
+    ~SOInitMessage();
+
+    String state;
+    String req = "-1";
+    String ack = "-1";
+    String cargo = "-1";
+    String targetReg = "-1";
+    int line = -1;
+    unsigned int packageId = 0;
+    String targetDest = "-1";
+    bool error;
+    bool token;
+
+    /**
+     * @brief Parse JSON object to the SOStateMessage class
+     * 
+     * @param doc 
+     * @param error 
+     */
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+
+    /**
+     * @brief Parse the SOStateMessage class to a publish string
+     * 
+     * @return String 
+     */
+    String parseStructToString() override;
+
+    /**
+     * @brief Set the SOStateMessage object
+     * 
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageState 
+     */
+    void setMessage();
+};
+
+/**
+ * @brief Child class to serialize error message
+ * 
+ */
+class BufferMessage : public Message
+{
+
+private:
+public:
+
+    /**
+     * @brief Construct a new Parse Error Message object
+     * 
+     */
+    BufferMessage();
+
+    /**
+     * @brief Destroy the Parse Error Message object
+     * 
+     */
+    ~BufferMessage();
+
+    bool full;
+    bool cleared;
+
+    /**
+     * @brief Parse JSON object to the BufferMessage class
+     * 
+     * @param doc 
+     * @param error 
+     */
+    void parseJSONToStruct(JsonDocument doc, DeserializationError error) override;
+    
+    /**
+     * @brief Parse the BufferMessage class to a publish string
+     * 
+     * @param messageClass - BufferMessage
+     * @return String 
+     */
+    String parseStructToString() override;
+
+    /**
+     * @brief Set the BufferMessage object
+     * 
+     * @param messageId 
+     * @param messageConsignor 
+     * @param messageFull 
+     * @param messageCleared 
+     */
+    void setMessage(unsigned int messageId, Consignor messageConsignor, bool messageFull, bool messageCleared);
+};
+
+
+
+#ifdef MASTER
+
+/**
+*  Received I2c message struct to store message for master
+* 
+*/
+struct ReceivedI2cMessage
+{
+    char event[11] = "-1";
+    unsigned int packageId = 0;
+    char targetDest[11] = "-1";
+    char cargo[11] = "-1";
+    char state[11] = "-1";
+    int position = -1;
+    bool error = false;
+    bool token = false;
+};
+
+/**
+*  Write I2c message struct to store answer message for master
+* 
+*/
+struct WriteI2cMessage
+{
+    char event[11] = "-1";
+    char information[11] = "-1";
+};
+
+
+#else
+/**
+*  Received I2c message struct to store message for slave
+* 
+*/
+struct ReceivedI2cMessage
+{
+    char event[11] = "-1";
+    char information[11] = "-1";
+};
+
+/**
+*  Write I2c message struct to store answer message for slave
+* 
+*/
+struct WriteI2cMessage
+{
+    char event[11] = "-1";
+    unsigned int packageId = "-1";
+    char targetDest[11] = "-1";
+    char cargo[11] = "-1";
+    char state[11] = "-1";
+    int position = -1;
+    bool error = false;
+    bool token = false;
+};
+
+#endif
+
 
 #endif
