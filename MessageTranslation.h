@@ -14,10 +14,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <memory>
-#include "LogConfiguration.h"
-//#include "MainConfiguration.h"
 
-#define MASTER
+#include "LogConfiguration.h"
+
 
 /**
  * @brief 
@@ -844,66 +843,5 @@ public:
      */
     void setMessage(unsigned int messageId, Consignor messageConsignor, bool messageFull, bool messageCleared);
 };
-
-
-
-#ifdef MASTER
-
-/**
-*  Received I2c message struct to store message for master
-* 
-*/
-struct ReceivedI2cMessage
-{
-    char event[11] = "-1";
-    unsigned int packageId = 0;
-    char targetDest[11] = "-1";
-    char cargo[11] = "-1";
-    char state[11] = "-1";
-    int position = -1;
-    bool error = false;
-    bool token = false;
-};
-
-/**
-*  Write I2c message struct to store answer message for master
-* 
-*/
-struct WriteI2cMessage
-{
-    char event[11] = "-1";
-    char information[11] = "-1";
-};
-
-
-#else
-/**
-*  Received I2c message struct to store message for slave
-* 
-*/
-struct ReceivedI2cMessage
-{
-    char event[11] = "-1";
-    char information[11] = "-1";
-};
-
-/**
-*  Write I2c message struct to store answer message for slave
-* 
-*/
-struct WriteI2cMessage
-{
-    char event[11] = "-1";
-    unsigned int packageId = "-1";
-    char targetDest[11] = "-1";
-    char cargo[11] = "-1";
-    char state[11] = "-1";
-    int position = -1;
-    bool error = false;
-    bool token = false;
-};
-
-#endif
-
 
 #endif
