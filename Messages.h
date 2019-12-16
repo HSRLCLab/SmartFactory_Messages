@@ -1,5 +1,5 @@
 /**
- * @file MessageTranslation.h
+ * @file Messages.h
  * @author Philip Zellweger (philip.zellweger@hsr.ch)
  * @brief Serializing functions for the messagetypes
  * @version 0.1
@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2019
  * 
  */
-#ifndef MESSAGETRANSLATION_H__
-#define MESSAGETRANSLATION_H__
+#ifndef MESSAGES_H__
+#define MESSAGES_H__
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -19,7 +19,9 @@
 
 
 /**
- * @brief 
+ * @brief Enum class holds all possible consignors
+ * 
+ * @todo use uids to get global id's
  * 
  */
 enum class Consignor
@@ -44,6 +46,12 @@ class Message
 
 
     public:
+
+    unsigned int msgId = 0;                                     ///< id of the message
+    MessageType msgType = MessageType::DEFAULTMESSAGETYPE;      ///< type of the message
+    unsigned int msgLength = 0;                                 ///< length of the message
+    Consignor msgConsignor = Consignor::DEFUALTCONSIGNOR;       ///< consignor of the message
+
     /**
      * @brief Construct a new Message object
      * 
@@ -91,16 +99,12 @@ class Message
     /**
      * @brief Static function to serialize a message class to a publish string
      * 
+     * @todo Delete this function and use direct function of spezific class
+     * 
      * @param object 
      * @return String 
      */
     static String translateStructToString(std::shared_ptr<Message> object); // raus nehmen
-
-    // maybe possible to define private?
-    unsigned int msgId = 0;
-    MessageType msgType = MessageType::DEFAULTMESSAGETYPE;
-    unsigned int msgLength = 0;
-    Consignor msgConsignor = Consignor::DEFUALTCONSIGNOR;
     
     /**
      * @brief Virtual function to parse JSON object to a message class
@@ -128,6 +132,12 @@ class PackageMessage : public Message
 {
 private:
 public:
+
+    unsigned int packageId = 0;                 ///< id of the package
+    String cargo = "-1";                        ///< cargo of the package
+    String targetDest = "-1";                   ///< target destination of the package
+    String targetReg = "-1";                    ///< target region of the package
+
     /**
      * @brief Construct a new Parse Package Message object
      * 
@@ -139,11 +149,6 @@ public:
      * 
      */
     ~PackageMessage();
-
-    unsigned int packageId = 0;
-    String cargo = "-1";
-    String targetDest = "-1";
-    String targetReg = "-1";
 
     /**
      * @brief Parse JSON object to the PackageMessage class
@@ -183,6 +188,9 @@ class ErrorMessage : public Message
 private:
 public:
 
+    bool error;                     ///< error
+    bool token;                     ///< token
+
     /**
      * @brief Construct a new Parse Error Message object
      * 
@@ -194,9 +202,6 @@ public:
      * 
      */
     ~ErrorMessage();
-
-    bool error;
-    bool token;
 
     /**
      * @brief Parse JSON object to the ErrorMessage class
@@ -234,6 +239,10 @@ class SBAvailableMessage : public Message
 private:
 public:
 
+    String sector = "-1";                           ///< sector of the smart box
+    int line = -1;                                  ///< line of the smart box
+    String targetReg = "-1";                        ///< target region of the smart box
+
     /**
      * @brief Construct a new Parse SB Available Message object
      * 
@@ -245,11 +254,6 @@ public:
      * 
      */
     ~SBAvailableMessage();
-
-    String sector = "-1";
-    int line = -1;
-    String targetReg = "-1";
-
     
     /**
      * @brief Parse JSON object to the SBAvailableMessage class
@@ -289,6 +293,9 @@ class SBPositionMessage : public Message
 private:
 public:
 
+    String sector = "-1";                           ///< sector of the smart box
+    int line = -1;                                  ///< line of the smart box
+
     /**
      * @brief Construct a new Parse S B Position Message object
      * 
@@ -300,9 +307,6 @@ public:
      * 
      */
     ~SBPositionMessage();
-
-    String sector = "-1";
-    int line = -1;
 
     /**
      * @brief Parse JSON object to the SBPositionMessage class
@@ -339,6 +343,8 @@ class SBStateMessage : public Message
 private:
 public:
 
+    String state = "-1";                            ///< state of the smart box
+
     /**
      * @brief Construct a new Parse S B State Message object
      * 
@@ -350,8 +356,6 @@ public:
      * 
      */
     ~SBStateMessage();
-
-    String state = "-1";
 
     /**
      * @brief Parse JSON object to the SBStateMessage class
@@ -388,6 +392,12 @@ class SBToSVHandshakeMessage : public Message
 private:   
 public:
 
+    String reck = "-1";                                     ///< request ID
+    String ack = "-1";                                      ///< acknoledge ID
+    String cargo = "-1";                                    ///< cargo
+    String targetReg = "-1";                                ///< target region
+    int line = -1;                                          ///< line
+
     /**
      * @brief Construct a new Parse SB to SV Handshake Message object
      * 
@@ -399,12 +409,6 @@ public:
      * 
      */
     ~SBToSVHandshakeMessage();
-
-    String reck = "-1";
-    String ack = "-1";
-    String cargo = "-1";
-    String targetReg = "-1";
-    int line = -1;
 
     /**
      * @brief Parse JSON object to the SBToSVHandshakeMessage class
@@ -444,6 +448,9 @@ class SVAvailableMessage : public Message
 private:
 public:
 
+    String sector = "-1";                               ///< sector of the smart vehicle
+    int line = -1;                                      ///< line of the smart vehicle
+
     /**
      * @brief Construct a new Parse SV Available Message object
      * 
@@ -455,9 +462,6 @@ public:
      * 
      */
     ~SVAvailableMessage();
-
-    String sector = "-1";
-    int line = -1;
 
     /**
      * @brief Parse JSON object to the SVAvailableMessage class
@@ -494,6 +498,9 @@ class SVPositionMessage : public Message
 private:
 public:
 
+    String sector = "-1";                               ///< sector of the smart vehicle
+    int line = -1;                                      ///< line of the smart vehicle
+
     /**
      * @brief Construct a new Parse SV Position Message object
      * 
@@ -505,9 +512,6 @@ public:
      * 
      */
     ~SVPositionMessage();
-
-    String sector = "-1";
-    int line = -1;
 
     /**
      * @brief Parse JSON object to the SVPositionMessage class
@@ -544,6 +548,8 @@ class SVStateMessage : public Message
 private:
 public:
 
+    String state = "-1";                    ///< state of the smart vehicle
+
     /**
      * @brief Construct a new Parse SV State Message object
      * 
@@ -555,8 +561,6 @@ public:
      * 
      */
     ~SVStateMessage();
-
-    String state = "-1"; 
 
     /**
      * @brief Parse JSON object to the SVStateMessage class
@@ -592,6 +596,12 @@ class SBToSOHandshakeMessage : public Message
 private:
 public:
 
+    String req = "-1";                                      ///< request
+    String ack = "-1";                                      ///< acknoledge
+    String cargo = "-1";                                    ///< cargo
+    String targetReg = "-1";                                ///< target region
+    int line = -1;                                          ///< line
+
     /**
      * @brief Construct a new Parse SB to SO Handshake Message object
      * 
@@ -603,12 +613,6 @@ public:
      * 
      */
     ~SBToSOHandshakeMessage();
-
-    String req = "-1";
-    String ack = "-1";
-    String cargo = "-1";
-    String targetReg = "-1";
-    int line = -1;
 
     /**
      * @brief Parse JSON object to the SBToSOHandshakeMessage class
@@ -648,6 +652,8 @@ class SOPositionMessage : public Message
 private:
 public:
 
+    int line = -1;                              ///< line of the sortic roboter
+
     /**
      * @brief Construct a new Parse SO Position Message object
      * 
@@ -659,8 +665,6 @@ public:
      * 
      */
     ~SOPositionMessage();
-
-    int line = -1; 
 
     /**
      * @brief Parse JSON object to the SOPositionMessage class
@@ -696,6 +700,8 @@ class SOStateMessage : public Message
 private:
 public:
 
+    String state;                   ///< state of the sortic roboter
+
     /**
      * @brief Construct a new Parse SO State Message object
      * 
@@ -707,8 +713,6 @@ public:
      * 
      */
     ~SOStateMessage();
-
-    String state;
 
     /**
      * @brief Parse JSON object to the SOStateMessage class
@@ -744,6 +748,17 @@ class SOInitMessage : public Message
 private:
 public:
 
+    String state;                           ///< state
+    String req = "-1";                      ///< request
+    String ack = "-1";                      ///< acknoledge
+    String cargo = "-1";                    ///< cargo
+    String targetReg = "-1";                ///< target region
+    int line = -1;                          ///< line
+    unsigned int packageId = 0;             ///< package id
+    String targetDest = "-1";               ///< target destination
+    bool error;                             ///< error
+    bool token;                             ///< token
+
     /**
      * @brief Construct a new Parse SO Init Message object
      * 
@@ -755,17 +770,6 @@ public:
      * 
      */
     ~SOInitMessage();
-
-    String state;
-    String req = "-1";
-    String ack = "-1";
-    String cargo = "-1";
-    String targetReg = "-1";
-    int line = -1;
-    unsigned int packageId = 0;
-    String targetDest = "-1";
-    bool error;
-    bool token;
 
     /**
      * @brief Parse JSON object to the SOStateMessage class
@@ -802,6 +806,9 @@ class BufferMessage : public Message
 private:
 public:
 
+    bool full;                      ///< full parameter
+    bool cleared;                   ///< cleared parameter
+
     /**
      * @brief Construct a new Parse Error Message object
      * 
@@ -813,9 +820,6 @@ public:
      * 
      */
     ~BufferMessage();
-
-    bool full;
-    bool cleared;
 
     /**
      * @brief Parse JSON object to the BufferMessage class

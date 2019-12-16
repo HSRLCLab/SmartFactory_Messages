@@ -1,5 +1,5 @@
 /**
- * @file MessageTranslation.cpp
+ * @file Messages.cpp
  * @author Philip Zellweger (philip.zellweger@hsr.ch)
  * @brief Serializing functions for the messagetypes
  * @version 0.1
@@ -8,9 +8,10 @@
  * @copyright Copyright (c) 2019
  * 
  */
-#include "MessageTranslation.h"
+#include "Messages.h"
 
-
+//======================BASECLASS=======================================================
+//=======================================================================================
 Message::Message()
 {
 }
@@ -23,7 +24,7 @@ Message::~Message()
 
 std::shared_ptr<Message> Message::translateJsonToStruct(const char* payload, unsigned int length)
 {
-    DBFUNCCALLln("std::shared_ptr<Message> Message::translateJsonToStruct(const char* payload, unsigned int length)");
+    DBFUNCCALLln("Message::translateJsonToStruct(const char*, unsigned int)");
     // Deserialize json object to json document
     DynamicJsonDocument tempJson(length);
     DeserializationError error = deserializeJson(tempJson, payload);
@@ -31,6 +32,7 @@ std::shared_ptr<Message> Message::translateJsonToStruct(const char* payload, uns
     // Generate pointer to return dynamic object
     std::shared_ptr<Message> retVal (nullptr);
    
+    // switch to correct msgtype to activate polymorphism
     switch (tempJson["msgType"].as<unsigned int>())
     {
     case (unsigned int)MessageType::Package:
@@ -128,24 +130,34 @@ std::shared_ptr<Message> Message::translateJsonToStruct(const char* payload, uns
 
 String Message::translateStructToString(std::shared_ptr<Message> object)
 {
+    DBFUNCCALLln("Message::translateStructToString(std::shared_ptr<Message>)");
     String retVal = object->parseStructToString();
     return retVal;
 }
 
-// ParsePackageMessage class
+
+//======================SPEZCLASS========================================================
+//=======================================================================================
+
+
+//======================PackageMessage===================================================
+//=======================================================================================
+
 PackageMessage::PackageMessage()
 {
+    DBFUNCCALLln("PackageMessage::PackageMessage()");
     this->msgType = MessageType::Package;
 }
 
 PackageMessage::~PackageMessage()
 {
+    DBFUNCCALLln("PackageMessage::~PackageMessage()");    
 }
 
 void PackageMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error) 
 {
     
-    DBFUNCCALLln("ParsePackageMessage::parseJSONToStruct(JsonDocument doc, &PackageMessage object, DeserializationError error)");
+    DBFUNCCALLln("PackageMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -175,7 +187,7 @@ void PackageMessage::parseJSONToStruct(JsonDocument doc, DeserializationError er
 String PackageMessage::parseStructToString()
 {
 
-    DBFUNCCALLln("ParsePackageMessage::parseStructToString(const PackageMessage *object)");
+    DBFUNCCALLln("PackageMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"packageId\":\"" + (String)this->packageId + "\",\"cargo\":\"" + this->cargo + "\",\"targetDest\":\"" + this->targetDest + "\",\"targetReg\":\"" + this->targetReg + "\"}";
     return tempString;
 }
@@ -183,6 +195,7 @@ String PackageMessage::parseStructToString()
 
 void PackageMessage::setMessage(unsigned int messageId, Consignor messageConsignor, unsigned int messagePackageId, String messageCargo, String messageTargetDest, String messageTargetReg)
 {
+    DBFUNCCALLln("PackageMessage::setMessage(unsigned int, Consignor, unsigned int, String, String, String)")
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->packageId = messagePackageId;
@@ -193,19 +206,23 @@ void PackageMessage::setMessage(unsigned int messageId, Consignor messageConsign
 }
 
 
-// ParseErrorMessage class
+//======================ErrorMessage=====================================================
+//=======================================================================================
+
 ErrorMessage::ErrorMessage()
 {
+    DBFUNCCALLln("ErrorMessage::ErrorMessage()");
     this->msgType = MessageType::Error;
 }
 
 ErrorMessage::~ErrorMessage()
 {
+    DBFUNCCALLln("ErrorMessage::~ErrorMessage()");
 }
 
 void ErrorMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseErrorMessage::parseJSONToStruct(JsonDocument doc, &ErrorMessage object, DeserializationError error)");
+    DBFUNCCALLln("ErrorMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -231,13 +248,14 @@ void ErrorMessage::parseJSONToStruct(JsonDocument doc, DeserializationError erro
 
 String ErrorMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseErrorMessage::parseStructToString(const ErrorMessage *object)");
+    DBFUNCCALLln("ErrorMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"error\":\"" + (String)this->error + "\",\"token\":\"" + (String)this->token + "\"}";
     return tempString;
 }
 
 void ErrorMessage::setMessage(unsigned int messageId, Consignor messageConsignor, bool messageError, bool messageToken)
 {
+    DBFUNCCALLln("ErrorMessage::setMessage(unsigned int, Consignor, bool, bool)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->error = messageError;
@@ -245,19 +263,23 @@ void ErrorMessage::setMessage(unsigned int messageId, Consignor messageConsignor
     this->msgLength = sizeof(this);
 }
 
-// ParseSBAvailableMessage class
+//======================SBAvailableMessage===============================================
+//=======================================================================================
+
 SBAvailableMessage::SBAvailableMessage()
 {
+    DBFUNCCALLln("SBAvailableMessage::SBAvailableMessage()");
     this->msgType = MessageType::SBAvailable;
 }
 
 SBAvailableMessage::~SBAvailableMessage()
 {
+    DBFUNCCALLln("SBAvailableMessage::~SBAvailableMessage()");
 }
 
 void SBAvailableMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseSBAvailableMessage::parseJSONToStruct(JsonDocument doc, &SBAvailableMessage object, DeserializationError error)");
+    DBFUNCCALLln("SBAvailableMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -284,13 +306,14 @@ void SBAvailableMessage::parseJSONToStruct(JsonDocument doc, DeserializationErro
 
 String SBAvailableMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSBAvailableMessage::parseStructToString(const ParseSBAvailableMessage *object)");
+    DBFUNCCALLln("SBAvailableMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"sector\":\"" + this->sector + "\",\"line\":\"" + (String)this->line + "\",\"targetReg\":\"" + this->targetReg + "\"}";
     return tempString;    
 }
 
 void SBAvailableMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine, String messageTargetReg)
 {
+    DBFUNCCALLln("SBAvailableMessage::setMessage(unsigned int, Consignor, String, int, String)")
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->sector = messageSector;
@@ -299,19 +322,22 @@ void SBAvailableMessage::setMessage(unsigned int messageId, Consignor messageCon
     this->msgLength = sizeof(this);
 }
 
-// ParseSBPositionMessage class
+//======================SBPositionMessage================================================
+//=======================================================================================
 SBPositionMessage::SBPositionMessage()
 {
+    DBFUNCCALLln("SBPositionMessage::SBPositionMessage()");
     this->msgType = MessageType::SBPosition;
 }
 
 SBPositionMessage::~SBPositionMessage()
 {
+    DBFUNCCALLln("SBPositionMessage::~SBPositionMessage()");
 }
 
 void SBPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseSBPositionMessage::parseJSONToStruct(JsonDocument doc, &SBPositionMessage object, DeserializationError error)");
+    DBFUNCCALLln("SBPositionMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -337,13 +363,14 @@ void SBPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError
 
 String SBPositionMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSBPositionMessage::parseStructToString(const SBPositionMessage *object)");
+    DBFUNCCALLln("SBPositionMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"sector\":\"" + this->sector + "\",\"line\":\"" + (String)this->line + "\"}";
     return tempString;    
 }
 
 void SBPositionMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine)
 {
+    DBFUNCCALLln("SBPositionMessage::setMessage(unsigned int, Consignor, String, int)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->sector = messageSector;
@@ -352,19 +379,23 @@ void SBPositionMessage::setMessage(unsigned int messageId, Consignor messageCons
 }
 
 
-// ParseSBStateMessage class
+//======================SBStateMessage===================================================
+//=======================================================================================
+
 SBStateMessage::SBStateMessage()
 {
+    DBFUNCCALLln("SBStateMessage::SBStateMessage()");
     this->msgType = MessageType::SBState;
 }
 
 SBStateMessage::~SBStateMessage()
 {
+    DBFUNCCALLln("SBStateMessage::~SBStateMessage()");
 }
 
 void SBStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseSBStateMessage::parseJSONToStruct(JsonDocument doc, &SBStateMessage object, DeserializationError error)");
+    DBFUNCCALLln("SBStateMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -389,33 +420,38 @@ void SBStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError er
 
 String SBStateMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSBStateMessage::parseStructToString(const SBStateMessage *object)");
+    DBFUNCCALLln("SBStateMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)(this->msgLength) + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"state\":\"" + (this->state) +"\"}";
     return tempString;    
 }
 
 void SBStateMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageState)
 {
+    DBFUNCCALLln("SBStateMessage::setMessage(unsigned int, Consignor, String)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->state = messageState;
     this->msgLength = (unsigned int)sizeof(this);
 }
 
-// ParseSBtoSVHandshakeMessage class
+//======================SBToSVHandshakeMessage===========================================
+//=======================================================================================
+
 SBToSVHandshakeMessage::SBToSVHandshakeMessage()
 {
+    DBFUNCCALLln("SBToSVHandshakeMessage::SBToSVHandshakeMessage()");
     this->msgType = MessageType::SBToSVHandshake;
 }
 
 SBToSVHandshakeMessage::~SBToSVHandshakeMessage()
 {
+    DBFUNCCALLln("SBToSVHandshakeMessage::~SBToSVHandshakeMessage()");
 }
 
 
 void SBToSVHandshakeMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseSBtoSVHandshakeMessage::parseJSONToStruct(JsonDocument doc, &SBToSVHandshakeMessage object, DeserializationError error)");
+    DBFUNCCALLln("SBToSVHandshakeMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -444,13 +480,14 @@ void SBToSVHandshakeMessage::parseJSONToStruct(JsonDocument doc, Deserialization
 
 String SBToSVHandshakeMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSBtoSVHandshakeMessage::parseStructToString(const SBToSVHandshakeMessage *object)");
+    DBFUNCCALLln("SBToSVHandshakeMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"reck\":\"" + this->reck + "\",\"ack\":\"" + this->ack + "\",\"cargo\":\"" + this->cargo + "\",\"line\":\"" + (String)this->line + "\"}";
     return tempString;    
 }
 
 void SBToSVHandshakeMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageReck, String messageAck, String messageCargo, int messageLine)
 {
+    DBFUNCCALLln("SBToSVHandshakeMessage::setMessage(unsigned int, Consignor, String, String, String, int)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->reck = messageReck;
@@ -460,19 +497,23 @@ void SBToSVHandshakeMessage::setMessage(unsigned int messageId, Consignor messag
     this->msgLength = sizeof(this);
 }
 
-// ParseSVAvailableMessage class
+//======================SVAvailableMessage===============================================
+//=======================================================================================
+
 SVAvailableMessage::SVAvailableMessage()
 {
+    DBFUNCCALLln("SVAvailableMessage::SVAvailableMessage()");
     this->msgType = MessageType::SVAvailable;
 }
 
 SVAvailableMessage::~SVAvailableMessage()
 {
+    DBFUNCCALLln("SVAvailableMessage::~SVAvailableMessage()");
 }
 
 void SVAvailableMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseSVAvailableMessage::parseJSONToStruct(JsonDocument doc, &SVAvailableMessage object, DeserializationError error)");
+    DBFUNCCALLln("SVAvailableMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -498,13 +539,14 @@ void SVAvailableMessage::parseJSONToStruct(JsonDocument doc, DeserializationErro
 
 String SVAvailableMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSVAvailableMessage::parseStructToString(const SVAvailableMessage *object)");
+    DBFUNCCALLln("SVAvailableMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"sector\":\"" + this->sector + "\",\"line\":\"" + (String)this->line + "\"}";
     return tempString;    
 }
 
 void SVAvailableMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine)
 {
+    DBFUNCCALLln("SVAvailableMessage::setMessage(unsigned int, Consignor, String, int)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->sector = messageSector;
@@ -512,19 +554,23 @@ void SVAvailableMessage::setMessage(unsigned int messageId, Consignor messageCon
     this->msgLength = sizeof(this);
 }
 
-// ParseSVPositionMessage class
+//======================SVPositionMessage================================================
+//=======================================================================================
+
 SVPositionMessage::SVPositionMessage()
 {
+    DBFUNCCALLln("SVPositionMessage::SVPositionMessage()");
     this->msgType = MessageType::SVPosition;
 }
 
 SVPositionMessage::~SVPositionMessage()
 {
+    DBFUNCCALLln("SVPositionMessage::~SVPositionMessage()");
 }
 
 void SVPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("ParseSVPositionMessage::parseJSONToStruct(JsonDocument doc, &SVPositionMessage object, DeserializationError error)");
+    DBFUNCCALLln("SVPositionMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -550,13 +596,14 @@ void SVPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError
 
 String SVPositionMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSVPositionMessage::parseStructToString(const SVPositionMessage *object)");
+    DBFUNCCALLln("SVPositionMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"sector\":\"" + this->sector + "\",\"line\":\"" + (String)this->line + "\"}";
     return tempString;    
 }
 
 void SVPositionMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageSector, int messageLine)
 {
+    DBFUNCCALLln("SVPositionMessage::setMessage(unsigned int, Consignor, String, int)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->sector = messageSector;
@@ -564,19 +611,23 @@ void SVPositionMessage::setMessage(unsigned int messageId, Consignor messageCons
     this->msgLength = sizeof(this);
 }
 
-// ParseSVStateMessage class
+//======================SVStateMessage===================================================
+//=======================================================================================
+
 SVStateMessage::SVStateMessage()
 {
+    DBFUNCCALLln("SVStateMessage::SVStateMessage()");
     this->msgType = MessageType::SVState;
 }
 
 SVStateMessage::~SVStateMessage()
 {
+    DBFUNCCALLln("SVStateMessage::~SVStateMessage()");
 }
 
 void SVStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
-    DBFUNCCALLln("ParseSVStateMessage::parseJSONToStruct(JsonDocument doc, &SVStateMessage object, DeserializationError error)");
+    DBFUNCCALLln("SVStateMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -601,13 +652,14 @@ void SVStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError er
 
 String SVStateMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSVStateMessage::parseStructToString(const SVStateMessage *object)");
+    DBFUNCCALLln("SVStateMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"state\":\"" + this->state + "\"}";
     return tempString;    
 }
 
 void SVStateMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageState)
 {
+    DBFUNCCALLln("SVStateMessage::setMessage(unsigned int, Consignor, String)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->state = messageState;
@@ -615,19 +667,23 @@ void SVStateMessage::setMessage(unsigned int messageId, Consignor messageConsign
 }
 
 
-// ParseSBToSOHandshakeMessage class
+//======================SBToSOHandshakeMessage===========================================
+//=======================================================================================
+
 SBToSOHandshakeMessage::SBToSOHandshakeMessage()
 {
+    DBFUNCCALLln("SBToSOHandshakeMessage::SBToSOHandshakeMessage()");
     this->msgType = MessageType::SBToSOHandshake;
 }
 
 SBToSOHandshakeMessage::~SBToSOHandshakeMessage()
 {
+    DBFUNCCALLln("SBToSOHandshakeMessage::~SBToSOHandshakeMessage()");
 }
 
 void SBToSOHandshakeMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
-    DBFUNCCALLln("ParseSBToSOHandshakeMessage::parseJSONToStruct(JsonDocument doc, &SBtoSOHandshakeMessage object, DeserializationError error)");
+    DBFUNCCALLln("SBToSOHandshakeMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -656,13 +712,14 @@ void SBToSOHandshakeMessage::parseJSONToStruct(JsonDocument doc, Deserialization
 
 String SBToSOHandshakeMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSBToSOHandshakeMessage::parseStructToString(const SBtoSOHandshakeMessage *object)");
+    DBFUNCCALLln("SBToSOHandshakeMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"reck\":\"" + this->req + "\",\"ack\":\"" + this->ack + "\",\"cargo\":\"" + this->cargo + "\",\"targetReg\":\"" + this->targetReg + "\",\"line\":\"" + (String)this->line + "\"}";
     return tempString;    
 }
 
 void SBToSOHandshakeMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageReq, String messageAck, String messageCargo, String messageTargetReg, int messageLine)
 {
+    DBFUNCCALLln("SBToSOHandshakeMessage::setMessage(unsigned int, Consignor, String, String, String, String, int)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->req = messageReq;
@@ -673,20 +730,24 @@ void SBToSOHandshakeMessage::setMessage(unsigned int messageId, Consignor messag
     this->msgLength = sizeof(this);
 }
 
-// ParseSOPositionMessage class
+//======================SOPositionMessage================================================
+//=======================================================================================
+
 SOPositionMessage::SOPositionMessage()
 {
+    DBFUNCCALLln("SOPositionMessage::SOPositionMessage()");
     this->msgType = MessageType::SOPosition;
 }
 
 SOPositionMessage::~SOPositionMessage()
 {
+    DBFUNCCALLln("SOPositionMessage::~SOPositionMessage()");
 }
 
 
 void SOPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
-    DBFUNCCALLln("ParseSOPositionMessage::parseJSONToStruct(JsonDocument doc, &SOPositionMessage object, DeserializationError error)");
+    DBFUNCCALLln("SOPositionMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -711,32 +772,37 @@ void SOPositionMessage::parseJSONToStruct(JsonDocument doc, DeserializationError
 
 String SOPositionMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSOPositionMessage::parseStructToString(const SOPositionMessage *object)");
+    DBFUNCCALLln("SOPositionMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"line\":\"" + (String)this->line + "\"}";
     return tempString;    
 }
 
 void SOPositionMessage::setMessage(unsigned int messageId, Consignor messageConsignor, int messageLine)
 {
+    DBFUNCCALLln("SOPositionMessage::setMessage(unsigned int, Consignor, int)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->line = messageLine;
     this->msgLength = sizeof(this);
 }
 
-// ParseSOStateMessage class
+//======================SOStateMessage===================================================
+//=======================================================================================
+
 SOStateMessage::SOStateMessage()
 {
+    DBFUNCCALLln("SOStateMessage::SOStateMessage()");
     this->msgType = MessageType::SOState;
 }
 
 SOStateMessage::~SOStateMessage()
 {
+    DBFUNCCALLln("SOStateMessage::~SOStateMessage()");
 }
 
 void SOStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
-    DBFUNCCALLln("ParseSOStateMessage::parseJSONToStruct(JsonDocument doc, &SOStateMessage object, DeserializationError error)");
+    DBFUNCCALLln("SOStateMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -761,35 +827,37 @@ void SOStateMessage::parseJSONToStruct(JsonDocument doc, DeserializationError er
 
 String SOStateMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSOStateMessage::parseStructToString(const SOStateMessage *object)");
+    DBFUNCCALLln("SOStateMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"state\":\"" + this->state + "\"}";
     return tempString;    
 }
 
 void SOStateMessage::setMessage(unsigned int messageId, Consignor messageConsignor, String messageState)
 {
+    DBFUNCCALLln("SOStateMessage::setMessage(unsigned int, Consignor, String)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->state = messageState;
     this->msgLength = sizeof(this);
 }
 
+//======================SOInitMessage====================================================
+//=======================================================================================
 
-
-
-// ParseSOStateMessage class
 SOInitMessage::SOInitMessage()
 {
+    DBFUNCCALLln("SOInitMessage::SOInitMessage()");
     this->msgType = MessageType::SOInit;
 }
 
 SOInitMessage::~SOInitMessage()
 {
+    DBFUNCCALLln("SOInitMessage::~SOInitMessage()");
 }
 
 void SOInitMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {   
-    DBFUNCCALLln("ParseSOInitMessage::parseJSONToStruct(JsonDocument doc, &SOInitMessage object, DeserializationError error)");
+    DBFUNCCALLln("SOInitMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -823,13 +891,14 @@ void SOInitMessage::parseJSONToStruct(JsonDocument doc, DeserializationError err
 
 String SOInitMessage::parseStructToString()
 {
-    DBFUNCCALLln("ParseSOInitMessage::parseStructToString(const SOInitMessage *object)");
+    DBFUNCCALLln("SOInitMessage::parseStructToString()");
     String tempString = "{\"msgId\":\"" + (String)this->msgId + "\",\"msgType\":\"" + (String)((unsigned int)(this->msgType)) + "\",\"msgLength\":\"" + (String)this->msgLength + "\",\"msgConsignor\":\"" + (String)((unsigned int)(this->msgConsignor)) + "\",\"state\":\"" + this->state + "\",\"reck\":\"" + this->req + "\",\"ack\":\"" + this->ack + "\",\"cargo\":\"" + this->cargo + "\",\"targetReg\":\"" + this->targetReg + "\",\"line\":\"" + (String)this->line + "\",\"targetReg\":\"" + this->targetReg + "\",\"error\":\"" + (String)this->error + "\",\"token\":\"" + (String)this->token + "\"}";
     return tempString;    
 }
 
 void SOInitMessage::setMessage()
 {
+    DBFUNCCALLln("SOInitMessage::setMessage()");
     this->msgId = 0;
     this->msgConsignor = Consignor::SO1;
     this->state = "null";
@@ -845,19 +914,23 @@ void SOInitMessage::setMessage()
     this->msgLength = sizeof(this);
 }
 
-// BufferMessage class
+//======================BufferMessage===================================================
+//=======================================================================================
+
 BufferMessage::BufferMessage()
 {
+    DBFUNCCALLln("BufferMessage::BufferMessage()");
     this->msgType = MessageType::Error;
 }
 
 BufferMessage::~BufferMessage()
 {
+    DBFUNCCALLln("BufferMessage::~BufferMessage()");
 }
 
 void BufferMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)
 {
-    DBFUNCCALLln("BufferMessage::parseJSONToStruct(JsonDocument doc, DeserializationError error)");
+    DBFUNCCALLln("BufferMessage::parseJSONToStruct(JsonDocument, DeserializationError)");
     if (error)
     {
         DBWARNING("deserializeJson() failed: ");
@@ -890,6 +963,7 @@ String BufferMessage::parseStructToString()
 
 void BufferMessage::setMessage(unsigned int messageId, Consignor messageConsignor, bool messageFull, bool messageCleared)
 {
+    DBFUNCCALLln("BufferMessage::setMessage(unsigned int, Consignor, bool, bool)");
     this->msgId = messageId;
     this->msgConsignor = messageConsignor;
     this->full = messageFull;
