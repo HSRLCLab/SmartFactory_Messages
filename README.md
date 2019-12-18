@@ -15,6 +15,10 @@ The used desing pattern is the factory. The principle is based on the polymorphi
    - Dependency Graph
    - Collaboration Diagram
 - ToDo's
+- Contributors
+- Changelog
+- License
+- Links to SmartFactory
 
 ## Tools and technologies
 
