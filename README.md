@@ -27,17 +27,16 @@ Doxygen was used for documentation of the source code. For using Doxygen in Visu
 
 #### Factory
 The structure of the factory design pattern is simple. It consists of a parent class which has a creatfunction and at least one purely virtual function. In addition, it has several child classes, which overwrite and thus define the purely virtual function of the element class. In the createfunction an object of the child class is dynamically created under condition of a criterion (in our case by the message type), the necessary overwritten functions are executed and finally a pointer with type of the parent class, which points to the dynamically created object, is returned. One of the advantages of the design pattern is its modularity. If a new message type is created in the project, it can easily be defined as a child class and added in the createfunction. This principle makes handling the different message types easy and modular.
-
+[Here](https://sourcemaking.com/design_patterns/factory_method) is a detailed explanation of the design pattern factory.
 =========== IMAGE ======================================
 
 #### UML
-The figure below shows the data model in UML notation. 
+The figure below shows the data model in UML notation. In the factory implemented in SmartFactory, the function "translateJsonToStruct" is the creat function and "parseJSONToStruct" is the virtual function which is overwritten.
 
 ================== IMAGE ===============================
 
 #### Dependency Graph
-The figure below shows the dependency tree of the main FSM CommunicationCtrl.
-The used extern libraries for the project:
+The figure below shows the dependency tree of the Message interface.
 
 
  ==================== IMAGE ==================================
@@ -45,7 +44,7 @@ The used extern libraries for the project:
  
  
 #### Collaboration Diagram
-The figure below shows the collaboration tree of the main FSM CommunicationCtrl. The arrow simbolizes an instanced object.
+The figure below shows the collaboration tree of the Message interface. The arrow simbolizes an instanced object.
 
 =================== IMAGE ==========================================
 
