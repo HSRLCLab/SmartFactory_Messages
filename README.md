@@ -10,8 +10,6 @@ The used desing pattern is the factory. The principle is based on the polymorphi
 - Software
 - ToDo's
 
-============================ IMAGE ================================
-
 ## Tools and technologies
 
 The source code is implemented in the programming language C++. In the following, the tools for editing the project are listed.
@@ -28,7 +26,9 @@ Doxygen was used for documentation of the source code. For using Doxygen in Visu
 #### Factory
 The structure of the factory design pattern is simple. It consists of a parent class which has a creatfunction and at least one purely virtual function. In addition, it has several child classes, which overwrite and thus define the purely virtual function of the element class. In the createfunction an object of the child class is dynamically created under condition of a criterion (in our case by the message type), the necessary overwritten functions are executed and finally a pointer with type of the parent class, which points to the dynamically created object, is returned. One of the advantages of the design pattern is its modularity. If a new message type is created in the project, it can easily be defined as a child class and added in the createfunction. This principle makes handling the different message types easy and modular.
 [Here](https://sourcemaking.com/design_patterns/factory_method) is a detailed explanation of the design pattern factory.
-=========== IMAGE ======================================
+
+![factory](https://developer-blog.net/wp-content/uploads/2018/01/factory-design-pattern.jpg)
+[Image: [Developer-Blog FACTORY DESIGN PATTERN](https://developer-blog.net/factory-design-pattern-in-c/)]
 
 #### UML
 The figure below shows the data model in UML notation. In the factory implemented in SmartFactory, the function "translateJsonToStruct" is the creat function and "parseJSONToStruct" is the virtual function which is overwritten.
