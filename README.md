@@ -4,10 +4,16 @@ The core of the SmartFactory project is communicating between the participants, 
 
 The used desing pattern is the factory. The principle is based on the polymorphism in which virtual functions of the base class are overwritten in the child class. A createfunction refers the message type to the correct specific class to serialize the received message. This principle ensures an easy handling of the different message types and standardizes the handling of messages throughout the SmartFactory project. 
 
-
 ## Table of contents
 - Tools and technologies
+   - Visual Studio Code
+   - Doxygen
+   - Shared pointer
 - Software
+   - Factory
+   - UML
+   - Dependency Graph
+   - Collaboration Diagram
 - ToDo's
 
 ## Tools and technologies
@@ -15,11 +21,16 @@ The used desing pattern is the factory. The principle is based on the polymorphi
 The source code is implemented in the programming language C++. In the following, the tools for editing the project are listed.
 
 #### Visual Studio Code
+
 The development environment used is [Visual Studio Code](https://code.visualstudio.com/) with the [PlatformIO extension](https://docs.platformio.org/en/latest/ide/vscode.html). The development environment can be downloaded for free. For an installation guide look here.  
 
 #### Doxygen
+
 Doxygen was used for documentation of the source code. For using Doxygen in Visual Studio code, the [Doxygen Documentation Generator](https://marketplace.visualstudio.com/items?itemName=cschlosser.doxdocgen) extension can be used.
- 
+
+#### Shared pointer
+
+Shared pointers are used to transfer dynamically created objects. The advantage of shared pointers is that you do not need direct control over deleting dynamically created objects. As soon as no pointer points to the created object, the object is automatically deleted. This tool makes the factory design pattern very powerful. An explanation of shared pointer can be found [here](https://de.cppreference.com/w/cpp/memory/shared_ptr).
 
 ## Software
 
@@ -48,6 +59,6 @@ The figure below shows the collaboration tree of the Message interface. The arro
 
 =================== IMAGE ==========================================
 
-## ToDo
+## ToDo's
 - [ ]
 - [ ]
