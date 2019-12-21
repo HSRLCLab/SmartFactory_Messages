@@ -92,6 +92,9 @@ class Message
      * 
      * @param payload 
      * @param length 
+     * 
+     * @todo Change name to MessageFactory
+     * 
      * @return std::shared_ptr<Message> 
      */
     static std::shared_ptr<Message> translateJsonToStruct(const char* payload, unsigned int length); // MessageFactory
