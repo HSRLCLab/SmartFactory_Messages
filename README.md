@@ -5,20 +5,20 @@ The core of the SmartFactory is the Communication amongst the participants, i.e.
 The used desing pattern is the Factory. The principle is based on the polymorphism in which virtual functions of the parent class are overwritten in the child class. A createfunction refers the message type to the correct specific class to serialise the received message. 
 
 ## Table of contents
-- Tools and technologies
-   - Visual Studio Code
-   - Doxygen
-   - Shared pointer
-- Software
-   - Factory
-   - UML
-   - Dependency Graph
-   - Collaboration Diagram
-- ToDo's
-- Contributors
-- Changelog
-- License
-- Links to SmartFactory
+- [Tools and technologies](#tools-and-technologies)
+   - [Visual Studio Code](#visual-studio-code)
+   - [Doxygen](#doxygen)
+   - [Shared pointer](#shared-pointer)
+- [Software](#software)
+   - [Factory](#factory)
+   - [UML](#uml)
+   - [Dependency Graph](#dependency-graph)
+   - [Include Graph](#include-graph)
+- [ToDo's](#todo's)
+- [Contributors](#contributors)
+- [Changelog](#changelog)
+- [License](#license)
+- [Links to SmartFactory](#links-to-smartfactory)
 
 ## Tools and technologies
 
