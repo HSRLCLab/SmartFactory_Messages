@@ -37,6 +37,7 @@ Shared pointers are used to transfer dynamically created objects. The advantage 
 ## Software
 
 #### Factory
+
 The structure of the Factory design pattern consists a parent class which has a creatfunction and at least one purely virtual function. In addition, it has several child classes, which overwrite and thus define the purely virtual function of the element class. In the createfunction an object of the child class is dynamically created under the condition of a criterion (in our case by the message type). The necessary overwritten functions are executed and finally a pointer with the type of the parent class returns the dynamically created object. One of the advantages of the design pattern is its modularity. If a new message type is created in the project, it can easily be defined as a child class and added into the createfunction. This principle makes handling of different message types easy and modular.
 [Here](https://sourcemaking.com/design_patterns/factory_method) is a detailed explanation of the design pattern Factory.
 
@@ -44,22 +45,26 @@ The structure of the Factory design pattern consists a parent class which has a 
 [Image: [Developer-Blog FACTORY DESIGN PATTERN](https://developer-blog.net/factory-design-pattern-in-c/)]
 
 #### UML
+
 The figure below shows the data model in UML notation. In the Factory implemented in SmartFactory, the function "translateJsonToStruct" is the creat function and "parseJSONToStruct" is the virtual function which is overwritten.
 
-================== IMAGE ===============================
+<p align="center">
+    <a href=https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/class_message.html>
+        <img src="https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/class_message__inherit__graph.png" style="border:none;"/>
+    </a>
+    <p align="center"><small>Click on the image to open doxygen-documentation.</p>
+</p>
 
-#### Dependency Graph
-The figure below shows the dependency tree of the Message interface.
+#### Include Graph
 
+The figure below shows the include graph of the Message interface.
 
- ==================== IMAGE ==================================
- 
- 
- 
-#### Collaboration Diagram
-The figure below shows the collaboration tree of the Message interface. The arrow simbolizes an instanced object.
-
-=================== IMAGE ==========================================
+<p align="center">
+    <a href=https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/_messages_8h.html>
+        <img src="https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/_messages_8h__incl.png" style="border:none;"/>
+    </a>
+    <p align="center"><small>Click on the image to open doxygen-documentation.</p>
+</p>
 
 ## ToDo's
 - [ ]
