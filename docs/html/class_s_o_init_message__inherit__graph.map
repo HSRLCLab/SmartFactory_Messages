@@ -1,0 +1,4 @@
+<map id="SOInitMessage" name="SOInitMessage">
+<area shape="rect" id="node1" title="Child class to serialize sortic state message." alt="" coords="14,248,171,516"/>
+<area shape="rect" id="node2" href="$class_message.html" title="Abstract parent class to serialize messages." alt="" coords="5,5,180,200"/>
+</map>

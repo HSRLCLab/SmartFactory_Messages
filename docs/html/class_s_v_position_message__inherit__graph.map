@@ -1,0 +1,4 @@
+<map id="SVPositionMessage" name="SVPositionMessage">
+<area shape="rect" id="node1" title="Child class to serialize smartvehicle position message." alt="" coords="9,248,177,399"/>
+<area shape="rect" id="node2" href="$class_message.html" title="Abstract parent class to serialize messages." alt="" coords="5,5,180,200"/>
+</map>
