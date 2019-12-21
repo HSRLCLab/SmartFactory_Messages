@@ -67,8 +67,8 @@ The figure below shows the include graph of the Message interface.
 </p>
 
 ## ToDo's
-- [ ]
-- [ ]
+
+All the ToDo's are documented in the source code with Doxygen. 
 
 # Contributors
 - [Philip Zellweger](https://github.com/philipzellweger)
