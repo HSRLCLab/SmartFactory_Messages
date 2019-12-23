@@ -49,7 +49,7 @@ The structure of the Factory design pattern consists a parent class which has a 
 The figure below shows the data model in UML notation. In the Factory implemented in SmartFactory, the function "translateJsonToStruct" is the creat function and "parseJSONToStruct" is the virtual function which is overwritten.
 
 <p align="center">
-    <a href=https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/class_message.html>
+    <a href= https://philipzellweger.github.io/SmartFactory_Messages/class_message.html>
         <img src="https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/class_message__inherit__graph.png" style="border:none;"/>
     </a>
     <p align="center"><small>Click on the image to open doxygen-documentation.</p>
@@ -60,7 +60,7 @@ The figure below shows the data model in UML notation. In the Factory implemente
 The figure below shows the include graph of the Message interface.
 
 <p align="center">
-    <a href=https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/_messages_8h.html>
+    <a href= https://philipzellweger.github.io/SmartFactory_Messages/_messages_8h.html>
         <img src="https://github.com/philipzellweger/SmartFactory_Messages/blob/master/docs/html/_messages_8h__incl.png" style="border:none;"/>
     </a>
     <p align="center"><small>Click on the image to open doxygen-documentation.</p>
